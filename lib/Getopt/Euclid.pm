@@ -833,7 +833,6 @@ sub _export_var {
 }
 
 1;                                 # Magic true value required at end of module
-__END__
 
 =head1 NAME
 
@@ -1207,7 +1206,7 @@ more than once, using the C<repeatable> option:
         repeatable
 
 When an argument is marked repeatable the corresponding entry of C<%ARGV> will
-not contain a sigle value, but rather an array reference. If the argument also
+not contain a single value, but rather an array reference. If the argument also
 has L<Multiple placeholders>, then the corresponding entry in C<%ARGV> will be
 an array reference with each array entry being a hash reference.
 
@@ -1849,7 +1848,7 @@ L<http://rt.cpan.org>.
 
 Damian Conway  C<< <DCONWAY@cpan.org> >>
 
-Kevin Galinsky
+Kevin Galinsky C<< <kgalinsky+cpan at gmail.com> >>
 
 =head1 LICENCE AND COPYRIGHT
 
