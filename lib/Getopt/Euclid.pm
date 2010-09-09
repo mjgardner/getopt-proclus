@@ -147,8 +147,8 @@ sub import {
     # Set up parsing rules...
     my $HWS     = qr{ [^\S\n]*      }xms;
     my $EOHEAD  = qr{ (?= ^=head1 | \z)  }xms;
-    my $POD_CMD = qr{ \n\n = [^\W\d]\w+ [^\n]* \n\n}xms;
-    my $POD_CUT = qr{ \n\n = cut $HWS \n\n}xms;
+    my $POD_CMD = qr{ (?! \n\n ) = [^\W\d]\w+ [^\n]* (?= \n\n )}xms;
+    my $POD_CUT = qr{ (?! \n\n ) = cut $HWS          (?= \n\n )}xms;
 
     my $NAME  = qr{ $HWS NAME    $HWS \n }xms;
     my $VERS  = qr{ $HWS VERSION $HWS \n }xms;
@@ -172,7 +172,7 @@ sub import {
 
     # Extract POD alone...
     my @chunks = $source =~ m{ $POD_CMD .*? (?: $POD_CUT | \z ) }gxms;
-    my $pod = join q{}, @chunks;
+    my $pod = join "\n\n", @chunks;
 
     # Extract essential interface components...
     my ($prog_name) = ( splitpath($0) )[-1];
