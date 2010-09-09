@@ -1,111 +1,76 @@
 Revision history for Getopt-Euclid
 
-0.0.1  Sun Jan 30 20:42:36 2005
-       Initial release.
-
-
-
-0.0.2  Sat Jul 23 04:37:18 2005
-       No changes logged
-
-
-0.0.3  Sun Jul 24 20:16:17 2005
-
-    - Removed need for Smart::Comments
-
-
-0.0.4  Thu Aug  4 18:03:28 2005
-
-    - Fixed embarrassing encoding bug (thanks dakkar!)
-
-
-0.0.5  Fri Feb 17 15:52:20 2006
-
-    - Changed POD::Text to Pod::Text (curse you, case-independent MacOS X!! ;-)
-
-    - Fixed erroneous bug report when only syntax checking with perl -c
-
-    - Fixed bug in license defaults (thanks clpoda!)
-
-    - Added :minimal_keys mode (thanks Thomas)
-
-
-0.0.6  Sun Sep 17 02:48:04 2006
-
-    - Removed spurious "compilation failed message" for interface errors
-      (thanks David!)
-
-    - Added 'repeatable' option (thanks Thomas)
-
-
-
-0.0.7  Tue Oct  3 03:54:01 2006
-
-    - Added :vars<opt_> mode (thanks Tim!)
-
-    - Fixed option names containing dashes. (thanks Tim!)
-
-    - Fixed minimal matching mode to more accurately detect clashes (thanks
-      Thomas)
-
-    - Added user-specified type.error messages (thanks Thomas)
-
-    - Tightened up checking of placeholder type constraints (thanks Tim)
-
-
-0.0.8  Sun Oct  8 12:45:17 2006
-
-    - Remove spurious smart comments
-
-    - Added missing documentation for placeholder misspecification diagnostic
-
-    - Made contents of validator subs fallback to main::
-
-    - Allowed false: flags to be regexes
-
-    - Fixed readable/writable test for '-' (thanks Thomas)
-
-    - Added regexes as valid placeholder type constraints
-
-
-0.0.9  Thu Oct 26 21:18:46 2006
-
-    - Patched :vars<opt_> mode to export all args (thanks Tim!)
-
-
-0.1.0  Thu Nov  2 19:47:05 2006
-
-    - Fixed failure to recognize +integer and 0+integer type specification
-      (thanks Ron)
-
-    - Added quotemeta'ing of regexically special characters 
-      (thanks Ron)
-
-    - Repatched :vars<opt_> mode to really export all args
-      (thanks again Tim!)
-
-
-0.2.0  Sat Aug  4 17:22:31 2007
-
-    - Added fallback to $main::VERSION if version not specified in Pod
-      (thanks Todd and Thomas)
-
-    - Added non-zero exit value on bad arg list (thanks Toby)
-
-    - Changed module behaviour: now removes identified arguments from @ARGV.
-      on successful match (thanks Aran and Tim)
-
-    - Allowed alternations everywhere (i.e. outside optionals too)
-
-    - Allowed E<lt> and E<gt> in option specifiers (thanks Wes)
+0.2.2  Thu Sep  9 19:30:55 2010
+  - #28474 - fixed the way name was being parsed
+  - #35895 - line delimiters converted to newlines
+  - #49524 - fixed way POD parsed so that headers after a =cut get parsed
+             properly
+  - #55259 - created $SCRIPT_VERSION variable containing parsed version
+  - #61039 - don't insert default value for options with optional placeholders
+             where the flag is given but a value for the placeholder is not
 
 0.2.1  Sun May 31 12:57:07 2009
+  - Removed BEGIN blocks and simply brought the defined variables to the top
+    of the module (thanks Todd)
+  - Update POD to make sure people don't "use Getopt::Euclid ();"
+  - Removed debugger break point (thanks Diab)
+  - Removed no bugs claim in POD
 
-    - Removed BEGIN blocks and simply brought the defined variables to the top
-      of the module (thanks Todd)
+0.2.0  Sat Aug  4 17:22:31 2007
+  - Added fallback to $main::VERSION if version not specified in Pod
+    (thanks Todd and Thomas)
+  - Added non-zero exit value on bad arg list (thanks Toby)
+  - Changed module behaviour: now removes identified arguments from @ARGV.
+    on successful match (thanks Aran and Tim)
+  - Allowed alternations everywhere (i.e. outside optionals too)
+  - Allowed E<lt> and E<gt> in option specifiers (thanks Wes)
 
-    - Update POD to make sure people don't "use Getopt::Euclid ();"
+0.1.0  Thu Nov  2 19:47:05 2006
+  - Fixed failure to recognize +integer and 0+integer type specification
+    (thanks Ron)
+  - Added quotemeta'ing of regexically special characters 
+    (thanks Ron)
+  - Repatched :vars<opt_> mode to really export all args
+    (thanks again Tim!)
 
-    - Removed debugger break point (thanks Diab)
+0.0.9  Thu Oct 26 21:18:46 2006
+  - Patched :vars<opt_> mode to export all args (thanks Tim!)
 
-    - Removed no bugs claim in POD
+0.0.8  Sun Oct  8 12:45:17 2006
+  - Remove spurious smart comments
+  - Added missing documentation for placeholder misspecification diagnostic
+  - Made contents of validator subs fallback to main::
+  - Allowed false: flags to be regexes
+  - Fixed readable/writable test for '-' (thanks Thomas)
+  - Added regexes as valid placeholder type constraints
+
+0.0.7  Tue Oct  3 03:54:01 2006
+  - Added :vars<opt_> mode (thanks Tim!)
+  - Fixed option names containing dashes. (thanks Tim!)
+  - Fixed minimal matching mode to more accurately detect clashes (thanks
+    Thomas)
+  - Added user-specified type.error messages (thanks Thomas)
+  - Tightened up checking of placeholder type constraints (thanks Tim)
+
+0.0.6  Sun Sep 17 02:48:04 2006
+  - Removed spurious "compilation failed message" for interface errors
+    (thanks David!)
+  - Added 'repeatable' option (thanks Thomas)
+
+0.0.5  Fri Feb 17 15:52:20 2006
+  - Changed POD::Text to Pod::Text (curse you, case-independent MacOS X!! ;-)
+  - Fixed erroneous bug report when only syntax checking with perl -c
+  - Fixed bug in license defaults (thanks clpoda!)
+  - Added :minimal_keys mode (thanks Thomas)
+
+0.0.4  Thu Aug  4 18:03:28 2005
+  - Fixed embarrassing encoding bug (thanks dakkar!)
+
+0.0.3  Sun Jul 24 20:16:17 2005
+  - Removed need for Smart::Comments
+
+0.0.2  Sat Jul 23 04:37:18 2005
+  No changes logged
+
+0.0.1  Sun Jan 30 20:42:36 2005
+  Initial release.
