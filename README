@@ -1,0 +1,55 @@
+Getopt::Euclid version 0.2.0
+
+       Getopt::Euclid uses your program's own documentation to create a com-
+       mand-line argument parser. This ensures that your program's documented
+       interface and its actual interface always agree.
+
+       To use the module, you simply write:
+
+           use Getopt::Euclid;
+
+       at the top of your program.
+
+       When the module is loaded within a regular Perl program, it will:
+
+            1.  locate any POD in the same file,
+            2.  extract information from that POD, most especially
+                from the "=head1 REQUIRED ARGUMENTS" and "=head1
+                OPTIONS" sections,
+            3.  build a parser that parses the arguments and options the
+                POD specifies,
+            4.  parse the contents of @ARGV using that parser, and
+            5.  put the results in the global %ARGV variable.
+
+
+INSTALLATION
+
+To install this module, run the following commands:
+
+    perl Makefile.PL
+    make
+    make test
+    make install
+
+
+Alternatively, to install with Module::Build, you can use the following commands:
+
+    perl Build.PL
+    ./Build
+    ./Build test
+    ./Build install
+
+
+
+DEPENDENCIES
+
+File::Spec::Functions
+List::Util
+
+
+COPYRIGHT AND LICENCE
+
+Copyright (C) 2005, Damian Conway
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
