@@ -1,6 +1,6 @@
 package Getopt::Euclid;
 
-use version; $VERSION = qv('0.2.1');
+use version; $VERSION = qv('0.2.2');
 
 use warnings;
 use strict;
@@ -670,6 +670,8 @@ sub _verify_args {
                               )
                               if $arg_vars->{$var}{constraint}
                                   && !$arg_vars->{$var}{constraint}->($val);
+                            $entry->{$var} = ''
+                              unless defined( $ARGV{$arg_name} );
                         }
                         next VAR;
                     }
