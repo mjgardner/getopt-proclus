@@ -140,6 +140,9 @@ sub import {
       or croak "Getopt::Euclid was unable to access POD\n($!)\nProblem was";
     my $source = do { local $/; <$fh> };
 
+    # Clean up line delimeters
+    s{ [\n\r] }{\n}gx foreach ($source, @std_POD);
+
     # Clean up significant entities...
     $source =~ s{ E<lt> }{<}gxms;
     $source =~ s{ E<gt> }{>}gxms;
