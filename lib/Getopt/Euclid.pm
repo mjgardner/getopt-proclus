@@ -93,6 +93,9 @@ sub Getopt::Euclid::Importer::DESTROY {
       '.pm file cannot define an explicit import() when using Getopt::Euclid';
 }
 
+# Central variable to store script version for ticket #55259
+our $SCRIPT_VERSION;
+
 sub import {
     shift @_;
     my $minimal_keys;
@@ -174,10 +177,11 @@ sub import {
     # Extract essential interface components...
     my ($prog_name) = ( splitpath($0) )[-1];
 
-    my ($version) =
+    # Extract version info
+    ($SCRIPT_VERSION) =
       $pod =~ m/^=head1 $VERS .*? (\d+(?:[._]\d+)+) .*? $EOHEAD /xms;
-    if ( !defined $version ) {
-        $version = $main::VERSION;
+    if ( !defined $SCRIPT_VERSION ) {
+        $SCRIPT_VERSION = $main::VERSION;
     }
 
     my ( $opt_name, $options ) =
@@ -351,7 +355,7 @@ m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms
             {$1 $prog_name $arg_summary $2}xms;
 
     $pod =~ s{ ^(=head1 $VERS    \s*) .*? (\s*) $EOHEAD }
-            {$1 This document refers to $prog_name version $version $2}xms;
+            {$1 This document refers to $prog_name version $SCRIPT_VERSION $2}xms;
 
     # Handle standard args...
     if ( grep { / --man /xms } @ARGV ) {
@@ -370,7 +374,7 @@ m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms
         _print_and_exit($pod);
     }
     elsif ( first { $_ eq '--version' } @ARGV ) {
-        print "This is $prog_name version $version\n";
+        print "This is $prog_name version $SCRIPT_VERSION\n";
         if ($licence) {
             print "\n$licence\n";
         }
@@ -842,7 +846,7 @@ Getopt::Euclid - Executable Uniform Command-Line Interface Descriptions
 
 =head1 VERSION
 
-This document describes Getopt::Euclid version 0.2.1
+This document describes Getopt::Euclid version 0.2.2
 
 =head1 SYNOPSIS
 
@@ -1074,7 +1078,14 @@ or:
     =head1 VERSION
     
     This is alpha release 1.2_34
-    
+
+You may also specify the version number in your code. However, in order for
+Getopt::Euclid to properly read it, it must be in a C<BEGIN> block:
+
+    BEGIN { use version; our $VERSION = qv('1.2.3') }
+    use Getopt::Euclid;
+
+Euclid stores the version as C<$Getopt::Euclid::SCRIPT_VERSION>.
 
 =item =head1 REQUIRED ARGUMENTS
 
