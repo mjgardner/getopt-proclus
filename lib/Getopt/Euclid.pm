@@ -141,7 +141,7 @@ sub import {
     my $source = do { local $/; <$fh> };
 
     # Clean up line delimeters
-    s{ [\n\r] }{\n}gx foreach ($source, @std_POD);
+    s{ [\n\r] }{\n}gx foreach ( $source, @std_POD );
 
     # Clean up significant entities...
     $source =~ s{ E<lt> }{<}gxms;
@@ -150,7 +150,7 @@ sub import {
     # Set up parsing rules...
     my $HWS     = qr{ [^\S\n]*      }xms;
     my $EOHEAD  = qr{ (?= ^=head1 | \z)  }xms;
-    my $POD_CMD = qr{ (?! \n\n ) = [^\W\d]\w+ [^\n]* (?= \n\n )}xms;
+    my $POD_CMD = qr{            = [^\W\d]\w+ [^\n]* (?= \n\n )}xms;
     my $POD_CUT = qr{ (?! \n\n ) = cut $HWS          (?= \n\n )}xms;
 
     my $NAME  = qr{ $HWS NAME    $HWS \n }xms;
@@ -351,8 +351,8 @@ m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms
     $arg_summary .= lc " [$opt_name]" if $opt_name;
     $arg_summary =~ s/\s+/ /gxms;
 
-    $pod =~ s{ ^(=head1 $NAME \s*) .*? (- .*) $EOHEAD }
-            {$1 $prog_name $2}xms;
+    $pod =~ s{ ^(=head1 $NAME \s*) .*? (- .*)? $EOHEAD }
+            {join(' ', $1, $prog_name, $2 || ())}xems;
 
     $pod =~ s{ ^(=head1 $USAGE \s*) .*? (\s*) $EOHEAD }
             {$1 $prog_name $arg_summary $2}xms;
