@@ -14,6 +14,8 @@ BEGIN {
         '-v',
         "--timeout $TIMEOUT",
     );
+
+    chmod 0644, $0;
 }
 
 # test that args to import are passed through to Getopt::Euclid

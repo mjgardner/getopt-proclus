@@ -17,6 +17,8 @@ BEGIN {
         '-w', 's p a c e s',
         7,
     );
+
+    chmod 0644, $0;
 }
 
 use Getopt::Euclid qw( :minimal_keys );

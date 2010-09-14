@@ -16,6 +16,8 @@ BEGIN {
         '--with', 's p a c e s',
         7,
     );
+
+    chmod 0644, $0;
 }
 
 sub lucky {

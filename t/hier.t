@@ -14,6 +14,8 @@ BEGIN {
         '-v',
         "--timeout $TIMEOUT",
     );
+
+    chmod 0644, $0;
 }
 
 use Getopt::Euclid::HierDemo;
