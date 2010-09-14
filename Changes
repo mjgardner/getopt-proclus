@@ -1,5 +1,8 @@
 Revision history for Getopt-Euclid
 
+0.2.3  2010/09/14 7:56
+  - #61321 - made tests that require writeable files set permissions to 644
+
 0.2.2  Thu Sep  9 19:30:55 2010
   - #28474 - fixed the way name was being parsed
   - #35895 - line delimiters converted to newlines
