@@ -1,23 +1,7 @@
 Revision history for Getopt-Euclid
 
-0.2.4
-  - New method to pass an arbitrary array of arguments to parsing: process_args
-  - New specifier to defer processing of @ARGV arguments: :defer
-  - New methods to access the program usage, version, manual and help messages
-  - Default values can now be displayed in program's documentation
-  - When a version number is missing from the POD or $main::VERSION, the file
-    time and date are used as version number
-  - Bugfix: when the --man flag was passed and the script name was like 'myprog'
-    instead of 'myprog - short description', an undef warning was issued
-  - Bugfix: when the --help flag was passed and either no required arguments or
-    no optional arguments were specified in the POD, an undef warning was issued
-  - Bugfix: the POD parsing mechanisms would capture POD text located inside
-    variables and other Perl-quoted strings
-  - The help message now includes --version and is more consistent with the
-    usage message
-
-0.2.3  Tue Sep 14 2010
-  - #61321 - made tests that require writeable files set own properties to 644
+0.2.3  2010/09/14 7:56
+  - #61321 - made tests that require writeable files set permissions to 644
 
 0.2.2  Thu Sep  9 19:30:55 2010
   - #28474 - fixed the way name was being parsed
