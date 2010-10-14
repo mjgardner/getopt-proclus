@@ -15,6 +15,7 @@ my @pm_pods;
 my $minimal_keys;
 my $vars_prefix;
 my $defer;
+my $matcher;
 my %requireds_hash;
 my %options_hash;
 my %long_names_hash;
@@ -165,24 +166,6 @@ sub process_args {
         exit;
     }
 
-    # Convert arg specifications to regexes...
-
-    _convert_to_regex( \%requireds_hash );
-    _convert_to_regex( \%options_hash );
-
-    # Build matcher...
-
-    my @arg_list = ( values(%requireds_hash), values(%options_hash) );
-    my $matcher = join '|', map { $_->{matcher} }
-      sort( { $b->{name} cmp $a->{name} } grep { $_->{name} =~ /^[^<]/ }
-          @arg_list ),
-      sort( { $a->{seq} <=> $b->{seq} } grep { $_->{name} =~ /^[<]/ }
-          @arg_list );
-
-    $matcher .= '|(?> (.+)) (?{ push @errors, $^N }) (?!)';
-
-    $matcher = '(?:' . $matcher . ')';
-
     # Report problems in parsing...
     *_bad_arglist = sub {
         my (@msg) = @_;
@@ -195,7 +178,6 @@ sub process_args {
 
     # Run matcher...
     my $all_args_ref = { %options_hash, %requireds_hash };
-
     my $argv =
       join( q{ }, map { my $arg = $_; $arg =~ tr/ \t/\0\1/; $arg } @$args );
     if ( my $error = _doesnt_match( $matcher, $argv, $all_args_ref ) ) {
@@ -574,6 +556,21 @@ m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms
     $version  = "This is $SCRIPT_NAME version $SCRIPT_VERSION\n";
     $version .= "\n$licence\n" if $licence;
 
+    # Convert arg specifications to regexes...
+    _convert_to_regex( {%requireds_hash, %options_hash} );
+
+    # Build matcher...
+    my @arg_list = ( values(%requireds_hash), values(%options_hash) );
+    $matcher = join '|', map { $_->{matcher} }
+      sort( { $b->{name} cmp $a->{name} } grep { $_->{name} =~ /^[^<]/ }
+          @arg_list ),
+      sort( { $a->{seq} <=> $b->{seq} } grep { $_->{name} =~ /^[<]/ }
+          @arg_list );
+
+    $matcher .= '|(?> (.+)) (?{ push @errors, $^N }) (?!)';
+
+    $matcher = '(?:' . $matcher . ')';
+
 }
 
 
@@ -763,6 +760,16 @@ sub _verify_args {
 sub _convert_to_regex {
     my ($args_ref) = @_;
 
+    # Regexp to capture the start of a new argument
+    my @arg_variants;
+    for my $arg_name ( keys %{$args_ref} ) {
+        push @arg_variants, @{$args_ref->{$arg_name}->{variants}};
+    }
+    my $no_match = join('|',@arg_variants);
+    $no_match =~ s{([@#$^*()+{}?])}{\\$1}gxms; # Quotemeta specials
+    $no_match = '(?!'.$no_match.')';
+
+
     for my $arg_name ( keys %{$args_ref} ) {
         my $arg   = $args_ref->{$arg_name};
         my $regex = $arg_name;
@@ -777,6 +784,9 @@ sub _convert_to_regex {
 
         $regex =~ s/ (\s+) /$1.'[\\s\\0\\1]*'/egxms;
         my $generic = $regex;
+
+
+        # Set the matcher
         $regex =~ s{ < (.*?) >(\.\.\.|) }
                    { my ($var_name, $var_rep) = ($1, $2);
                      $var_name =~ s/(\s+)\[\\s\\0\\1]\*/$1/gxms;
@@ -786,7 +796,7 @@ sub _convert_to_regex {
                                         ? eval "qr$type"
                                         : $STD_MATCHER_FOR{ $type }
                          or _fail("Unknown type ($type) in specification: $arg_name");
-                     $var_rep              ? "(?:[\\s\\0\\1]*($matcher)(?{push \@{(\$ARGV{q{$arg_name}}||=[{}])->[-1]{q{$var_name}}}, \$^N}))+"
+                     $var_rep              ? "(?:[\\s\\0\\1]*$no_match($matcher)(?{push \@{(\$ARGV{q{$arg_name}}||=[{}])->[-1]{q{$var_name}}}, \$^N}))+"
                      :
                      "(?:($matcher)(?{(\$ARGV{q{$arg_name}}||=[{}])->[-1]{q{$var_name}} = \$^N}))"
                    }gexms
@@ -807,6 +817,7 @@ sub _convert_to_regex {
               );
         }
 
+        # Set the generic matcher
         $generic =~ s{ < (.*?) > }
                      { my $var_name = $1;
                        $var_name =~ s/(\s+)\[\\s\\0\\1]\*/$1/gxms;
@@ -1489,18 +1500,31 @@ level placeholder keys I<don't> retain their angle-brackets.
 
 Any placeholder that is immediately followed by C<...>, like so:
 
-    =item -lib <files>...
-
-    =item <offsets>...
+    =item -lib <file>...
 
     =for Euclid:
-        offsets.type: integer > 0
+        file.type: readable
 
-will match as many times as possible, but at least once. Note that
-this implies that an unconstrained repeated unflagged placeholder
-(see L<Placeholder constraints> and L<Unflagged placeholders>) will
-consume the rest of the command-line, and so should be specified last
-in the POD.
+will match at least once, but as many times as possible before encountering
+the next argument on the command-line. This allows to specify multiple values
+for an argument, for example:
+
+    -lib file1.txt file2.txt
+
+An unconstrained repeated unflagged placeholder (see L<Placeholder constraints>
+and L<Unflagged placeholders>) will consume the rest of the command-line, and
+so should be specified last in the POD
+
+    =item -n <name>
+
+    =item <offset>...
+
+    =for Euclid:
+        offset.type: 0+int
+
+and on the command-line:
+
+    -n foobar 1 5 0 23
 
 If a placeholder is repeated, the corresponding entry in C<%ARGV>
 will then be an array reference, with each individual placeholder match
