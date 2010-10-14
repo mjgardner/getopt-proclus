@@ -37,11 +37,10 @@ $OPTIONAL = qr{ \[ [^[]* (?: (??{$OPTIONAL}) [^[]* )* \] }xms;
 # Convert arg specification syntax to Perl regex syntax
 
 my %STD_MATCHER_FOR = (
-    integer => '[+-]?\\d+',
+    integer => '[+-]?\\d+(?:[eE][+]?\d+)?',
     number  => '[+-]?(?:\\d+\\.?\\d*|\\.\\d+)(?:[eE][+-]?\d+)?',
     input   => '\S+',
     output  => '\S+',
-    file    => '\S+',
     string  => '\S+',
     q{}     => '\S+',
 );
