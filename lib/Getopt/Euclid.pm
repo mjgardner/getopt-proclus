@@ -5,7 +5,7 @@ use version; $VERSION = qv('0.2.4');
 use warnings;
 use strict;
 use Carp;
-use File::Spec::Functions qw(splitpath);
+use File::Spec::Functions qw(splitpath catpath);
 use List::Util qw( first );
 use Text::Balanced qw(extract_quotelike extract_bracketed extract_multiple);
 
@@ -64,8 +64,8 @@ my %STD_CONSTRAINT_FOR = (
     '0+number'  => sub { $_[0] >= 0 },
     'input' => sub { $_[0] eq '-' || -r $_[0] },
     'output' => sub {
-        my ( undef, $dir ) = splitpath( $_[0] );
-        $dir ||= '.';
+        my ( $vol, $dir ) = splitpath( $_[0] );
+        $dir = ($vol && $dir) ? catpath($vol, $dir) : '.';
         $_[0] eq '-' ? 1 : -e $_[0] ? -w $_[0] : -w $dir;
     },
 );
