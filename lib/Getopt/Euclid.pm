@@ -7,7 +7,7 @@ use strict;
 use Carp;
 use File::Spec::Functions qw(splitpath);
 use List::Util qw( first );
-use Text::Balanced qw(extract_quotelike extract_multiple);
+use Text::Balanced qw(extract_quotelike extract_bracketed extract_multiple);
 
 # Set some module variables
 my $has_run;
@@ -402,6 +402,7 @@ m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms
     my %seen;
 
     while ( my ($name, $spec) = each %requireds ) {
+        _check_name($name);
         my @variants = _get_variants($name);
         $requireds_hash{$name} = {
             seq      => $seq_num++,
@@ -419,6 +420,7 @@ m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms
         $long_names_hash{ _longestname(@variants) } = $name;
     }
     while ( my ($name, $spec) = each %options ) {
+        _check_name($name);
         my @variants = _get_variants($name);
         $options_hash{$name} = {
             seq      => $seq_num++,
@@ -850,6 +852,19 @@ sub _print_pod {
     }
 
 }
+
+
+sub _check_name {
+    # Check that the argument name only has pairs of < > brackets (ticket 34199)
+    my ($name) = @_;
+    for my $s (extract_multiple($name,[sub{extract_bracketed($_[0],'<>')}],undef,0)) {
+        $s =~ s/^<(.*)>$/$1/;
+        if ( $s =~ m/[<>]/ ) {
+            _fail( 'Invalid argument specification: ' . $name );
+         }
+    }
+}
+
 
 sub _get_variants {
     my @arg_desc = shift =~ m{ [^[|]+ (?: $OPTIONAL [^[|]* )* }gmxs;
