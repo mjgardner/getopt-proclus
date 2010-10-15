@@ -440,82 +440,7 @@ m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms
     _minimize_entries_of( \%long_names_hash );
 
     # Extract Euclid information...
-  ARG:
-    for my $arg ( values(%requireds_hash), values(%options_hash) ) {
-        $arg->{src} =~ s{^ =for \s+ Euclid\b [^\n]* \s* (.*) \z}{}ixms
-          or next ARG;
-        my $info = $1;
-
-        $arg->{is_repeatable} = $info =~ s{^ \s* repeatable \s*? $}{}xms;
-
-        my @false_vals;
-        while ( $info =~ s{^ \s* false \s*[:=] \s* ([^\n]*)}{}xms ) {
-            my $regex = $1;
-            1 while $regex =~ s/ \[ ([^]]*) \] /(?:$1)?/gxms;
-            $regex =~ s/ (\s+) /$1.'[\\s\\0\\1]*'/egxms;
-            push @false_vals, $regex;
-        }
-        if (@false_vals) {
-            $arg->{false_vals} = '(?:' . join( '|', @false_vals ) . ')';
-        }
-
-        while (
-            $info =~ m{\G \s* (([^.]+)\.([^:=\s]+) \s*[:=]\s* ([^\n]*)) }gcxms )
-        {
-            my ( $spec, $var, $field, $val ) = ( $1, $2, $3, $4 );
-
-            # Check for misplaced fields...
-            if ( $arg->{name} !~ m{\Q<$var>}xms ) {
-                _fail(
-"Invalid constraint: $spec\n(No <$var> placeholder in argument: $arg->{name})"
-                );
-            }
-
-            # Decode...
-            if ( $field eq 'type.error' ) {
-                $arg->{var}{$var}{type_error} = $val;
-            }
-            elsif ( $field eq 'type' ) {
-                my ( $matchtype, $comma, $constraint ) =
-                  $val =~ m{(/(?:\.|.)+/ | [^,\s]+)\s*(?:(,))?\s*(.*)}xms;
-                $arg->{var}{$var}{type} = $matchtype;
-
-                if ( $comma && length $constraint ) {
-                    ( $arg->{var}{$var}{constraint_desc} = $constraint ) =~
-                      s/\s*\b\Q$var\E\b\s*//g;
-                    $constraint =~ s/\b\Q$var\E\b/\$_[0]/g;
-                    $arg->{var}{$var}{constraint} = eval "sub{ $constraint }"
-                      or _fail("Invalid .type constraint: $spec\n($@)");
-                }
-                elsif ( length $constraint ) {
-                    $arg->{var}{$var}{constraint_desc} = $constraint;
-                    $arg->{var}{$var}{constraint} =
-                      eval "sub{ \$_[0] $constraint }"
-                      or _fail("Invalid .type constraint: $spec\n($@)");
-                }
-                else {
-                    $arg->{var}{$var}{constraint_desc} = $matchtype;
-                    $arg->{var}{$var}{constraint} =
-                      $matchtype =~ m{\A\s*/.*/\s*\z}xms
-                      ? sub { 1 }
-                      : $STD_CONSTRAINT_FOR{$matchtype}
-                      or _fail("Unknown .type constraint: $spec");
-                }
-            }
-            elsif ( $field eq 'default' ) {
-                eval "\$val = $val; 1"
-                  or _fail("Invalid .default value: $spec\n($@)");
-                $arg->{var}{$var}{default} = $val;
-                $arg->{has_defaults} = 1;
-            }
-            else {
-                _fail("Unknown specification: $spec");
-            }
-        }
-        if ( $info =~ m{\G \s* ([^\s\0\1] [^\n]*) }gcxms ) {
-            _fail("Unknown specification: $1");
-        }
-    }
+    _process_euclid_specs( values(%requireds_hash), values(%options_hash) );
 
     # Build one-line representation of interface...
     my $arg_summary = join ' ',
@@ -571,6 +496,114 @@ m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms
     $matcher .= '|(?> (.+)) (?{ push @errors, $^N }) (?!)';
 
     $matcher = '(?:' . $matcher . ')';
+
+}
+
+
+sub _process_euclid_specs {
+    my (@args) = @_;
+
+    my %var_list;
+
+    ARG:
+    for my $arg ( @args ) {
+        $arg->{src} =~ s{^ =for \s+ Euclid\b [^\n]* \s* (.*) \z}{}ixms
+            or next ARG;
+        my $info = $1;
+
+        $arg->{is_repeatable} = $info =~ s{^ \s* repeatable \s*? $}{}xms;
+
+        my @false_vals;
+        while ( $info =~ s{^ \s* false \s*[:=] \s* ([^\n]*)}{}xms ) {
+            my $regex = $1;
+            1 while $regex =~ s/ \[ ([^]]*) \] /(?:$1)?/gxms;
+            $regex =~ s/ (\s+) /$1.'[\\s\\0\\1]*'/egxms;
+            push @false_vals, $regex;
+        }
+        if (@false_vals) {
+            $arg->{false_vals} = '(?:' . join( '|', @false_vals ) . ')';
+        }
+
+        while (
+            $info =~ m{\G \s* (([^.]+)\.([^:=\s]+) \s*[:=]\s* ([^\n]*)) }gcxms )
+        {
+            my ( $spec, $var, $field, $val ) = ( $1, $2, $3, $4 );
+
+            $var_list{$var} = undef;
+
+            # Check for misplaced fields...
+            if ( $arg->{name} !~ m{\Q<$var>}xms ) {
+                _fail(
+"Invalid constraint: $spec\n(No <$var> placeholder in argument: $arg->{name})"
+                );
+            }
+
+            # Decode...
+            if ( $field eq 'type.error' ) {
+                $arg->{var}{$var}{type_error} = $val;
+            }
+            elsif ( $field eq 'type' ) {
+                my ( $matchtype, $comma, $constraint ) =
+                  $val =~ m{(/(?:\.|.)+/ | [^,\s]+)\s*(?:(,))?\s*(.*)}xms;
+                $arg->{var}{$var}{type} = $matchtype;
+
+                if ( $comma && length $constraint ) {
+                    ( $arg->{var}{$var}{constraint_desc} = $constraint ) =~
+                      s/\s*\b\Q$var\E\b\s*//g;
+                    $constraint =~ s/\b\Q$var\E\b/\$_[0]/g;
+                    $arg->{var}{$var}{constraint} = eval "sub{ $constraint }"
+                      or _fail("Invalid .type constraint: $spec\n($@)");
+                }
+                elsif ( length $constraint ) {
+                    $arg->{var}{$var}{constraint_desc} = $constraint;
+                    $arg->{var}{$var}{constraint} =
+                      eval "sub{ \$_[0] $constraint }"
+                      or _fail("Invalid .type constraint: $spec\n($@)");
+                }
+                else {
+                    $arg->{var}{$var}{constraint_desc} = $matchtype;
+                    $arg->{var}{$var}{constraint} =
+                      $matchtype =~ m{\A\s*/.*/\s*\z}xms
+                      ? sub { 1 }
+                      : $STD_CONSTRAINT_FOR{$matchtype}
+                      or _fail("Unknown .type constraint: $spec");
+                }
+            }
+            elsif ( $field eq 'default' ) {
+                eval "\$val = $val; 1"
+                  or _fail("Invalid .default value: $spec\n($@)");
+                $arg->{var}{$var}{default} = $val;
+                $arg->{has_defaults} = 1;
+            }
+            elsif ( $field eq 'excludes' ) {
+                $arg->{var}{$var}{excludes} = [ split ',', $val ];
+                for my $excl_var (@{$arg->{var}{$var}{excludes}}) {
+                    if ($var eq $excl_var) {
+                        _fail( "Invalid .excludes value for variable <$var>: ".
+                            "<$excl_var> cannot exclude itself\n" );
+                    }
+                }
+            }
+            else {
+                _fail("Unknown specification: $spec");
+            }
+        }
+        if ( $info =~ m{\G \s* ([^\s\0\1] [^\n]*) }gcxms ) {
+            _fail("Unknown specification: $1");
+        }
+    }
+    
+    # Validate .excludes specs
+    for my $arg ( @args ) {
+        for my $var (keys %{$arg->{var}}) {
+            for my $excl_var (@{$arg->{var}{$var}{excludes}}) {
+                if (not exists $var_list{$excl_var}) {
+                    _fail( "Invalid .excludes value for variable <$var>: ".
+                        "<$excl_var> does not exist\n" );
+                }
+            }
+        }
+    }
 
 }
 
