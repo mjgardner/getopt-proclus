@@ -177,7 +177,7 @@ sub process_args {
 
     # Run matcher...
     my $all_args_ref = { %options_hash, %requireds_hash };
-    my $argv =
+    my $argv = 
       join( q{ }, map { my $arg = $_; $arg =~ tr/ \t/\0\1/; $arg } @$args );
     if ( my $error = _doesnt_match( $matcher, $argv, $all_args_ref ) ) {
         _bad_arglist($error);
@@ -199,7 +199,7 @@ sub process_args {
 
     _rectify_args();
 
-    # Check constraints and fill in defaults...
+    # Check exclusive variables, variable constraints and fill in defaults...
 
     _verify_args($all_args_ref);
 
@@ -402,7 +402,6 @@ m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms
     my %seen;
 
     while ( my ($name, $spec) = each %requireds ) {
-        _check_name($name);
         my @variants = _get_variants($name);
         $requireds_hash{$name} = {
             seq      => $seq_num++,
@@ -420,7 +419,6 @@ m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms
         $long_names_hash{ _longestname(@variants) } = $name;
     }
     while ( my ($name, $spec) = each %options ) {
-        _check_name($name);
         my @variants = _get_variants($name);
         $options_hash{$name} = {
             seq      => $seq_num++,
@@ -502,11 +500,18 @@ m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms
 
 sub _process_euclid_specs {
     my (@args) = @_;
-
     my %var_list;
 
-    ARG:
+  ARG:
     for my $arg ( @args ) {
+
+        # Record variables seen here...
+        my $var_names = _check_name( $arg->{name} );
+        for my $var_name (@$var_names) {
+            $var_list{$var_name} = undef;
+        }
+
+        # Process arguments with a Euclid specification further
         $arg->{src} =~ s{^ =for \s+ Euclid\b [^\n]* \s* (.*) \z}{}ixms
             or next ARG;
         my $info = $1;
@@ -524,12 +529,11 @@ sub _process_euclid_specs {
             $arg->{false_vals} = '(?:' . join( '|', @false_vals ) . ')';
         }
 
+
         while (
             $info =~ m{\G \s* (([^.]+)\.([^:=\s]+) \s*[:=]\s* ([^\n]*)) }gcxms )
         {
             my ( $spec, $var, $field, $val ) = ( $1, $2, $3, $4 );
-
-            $var_list{$var} = undef;
 
             # Check for misplaced fields...
             if ( $arg->{name} !~ m{\Q<$var>}xms ) {
@@ -592,7 +596,7 @@ sub _process_euclid_specs {
             _fail("Unknown specification: $1");
         }
     }
-    
+
     # Validate .excludes specs
     for my $arg ( @args ) {
         for my $var (keys %{$arg->{var}}) {
@@ -699,7 +703,6 @@ sub _rectify_args {
 
 sub _verify_args {
     my ($arg_specs_ref) = @_;
-
   ARG:
     for my $arg_name ( keys %{$arg_specs_ref} ) {
 
@@ -889,13 +892,18 @@ sub _print_pod {
 
 sub _check_name {
     # Check that the argument name only has pairs of < > brackets (ticket 34199)
+    # Return the name of the variables that this argument specifies
     my ($name) = @_;
+    my %var_names;
     for my $s (extract_multiple($name,[sub{extract_bracketed($_[0],'<>')}],undef,0)) {
-        $s =~ s/^<(.*)>$/$1/;
+        if ($s =~ s/^<(.*)>$/$1/) {
+            $var_names{$1} = undef;
+        }
         if ( $s =~ m/[<>]/ ) {
             _fail( 'Invalid argument specification: ' . $name );
-         }
+        }
     }
+    return [keys %var_names];
 }
 
 
