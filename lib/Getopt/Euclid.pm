@@ -2080,6 +2080,11 @@ instead of:
     =for Euclid
         curse.default: '*$@!&'
 
+=item Invalid .excludes value for variable %s: <%s> does not exist
+
+You specified to exclude a variable that was not seen in the POD. Make sure
+that this is not a typo.
+
 =item Invalid constraint: %s (No <%s> placeholder in argument: %s)
 
 You attempted to define a C<.type> constraint for a placeholder that
