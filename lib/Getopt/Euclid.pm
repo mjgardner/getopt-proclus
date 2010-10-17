@@ -1776,6 +1776,29 @@ You can refer to an argument default value in its POD entry as shown below:
         h.default: 24
         w.default: 80
 
+=head2 Exclusive placeholders
+
+Some arguments can be exclusive. In this case, it is possible to specify
+that a placeholder excludes a list of other placeholders, for example:
+
+    =item -height <h>
+
+    Set the desired height
+
+    =item -width <w>
+
+    Set the desired width
+
+    =item -volume <v>
+
+    Set the desired volume
+
+    =for Euclid:
+        v.excludes: h, w
+
+Specifying both placeholders at the same time on the command-line will
+generate an error.
+
 =head2 Argument cuddling
 
 Getopt::Euclid allows any "flag" argument to be "cuddled". A flag
