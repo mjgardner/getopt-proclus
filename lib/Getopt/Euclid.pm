@@ -98,6 +98,10 @@ sub import {
     @_ = grep { !( /:defer/ and $defer = 1 ) } @_;
     croak "Unknown mode ('$_')" for @_;
 
+    # No automatic argument parsing in Perl compile mode (ticket 34195)
+    $defer = 1 if $^C;
+
+    # Sanity check
     if ($has_run) {
         carp "Getopt::Euclid loaded a second time";
         warn "Second attempt to parse command-line was ignored\n";
