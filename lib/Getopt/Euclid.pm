@@ -703,6 +703,37 @@ sub _rectify_args {
 
 sub _verify_args {
     my ($arg_specs_ref) = @_;
+    # Check exclusive variables, variable constraints and fill in defaults...
+
+    # Enforce variables that exclude others
+    my %seen_vars;
+    for my $arg_name (keys %ARGV) {
+        for my $elem (@{$ARGV{$arg_name}}) {
+            for my $var_name (keys %$elem) {
+                $seen_vars{$var_name} = $arg_name if $var_name;
+            }
+        }
+    }
+    for my $arg_name ( keys %{$arg_specs_ref} ) {
+        my $arg = $arg_specs_ref->{$arg_name};
+        for my $var_name ( keys %{$arg->{var}} ) {
+            my $var = $arg->{var}->{$var_name};
+            for my $excl_var ( @{$var->{excludes}} ) {
+                if (exists $seen_vars{$var_name} &&
+                    exists $seen_vars{$excl_var}) {
+                    my $excl_arg = $seen_vars{$excl_var};
+                    _bad_arglist(
+                        qq{Invalid "$excl_arg" argument.\n},
+                        qq{<$excl_var> cannot be specified with <$var_name> },
+                        qq{because argument "$arg_name" excludes <$excl_var>},
+                    )
+                }
+            }
+        }
+    }
+    undef %seen_vars;
+    
+    # Enforce constraints and fill in defaults...
   ARG:
     for my $arg_name ( keys %{$arg_specs_ref} ) {
 
