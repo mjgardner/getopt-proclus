@@ -579,8 +579,11 @@ sub _process_euclid_specs {
                 $arg->{var}{$var}{default} = $val;
                 $arg->{has_defaults} = 1;
             }
+            elsif ( $field eq 'excludes.error' ) {
+                $arg->{var}{$var}{excludes_error} = $val;
+            }
             elsif ( $field eq 'excludes' ) {
-                $arg->{var}{$var}{excludes} = [ split ',', $val ];
+                $arg->{var}{$var}{excludes} = [ split '\s*,\s*', $val ];
                 for my $excl_var (@{$arg->{var}{$var}{excludes}}) {
                     if ($var eq $excl_var) {
                         _fail( "Invalid .excludes value for variable <$var>: ".
@@ -722,11 +725,15 @@ sub _verify_args {
                 if (exists $seen_vars{$var_name} &&
                     exists $seen_vars{$excl_var}) {
                     my $excl_arg = $seen_vars{$excl_var};
-                    _bad_arglist(
-                        qq{Invalid "$excl_arg" argument.\n},
-                        qq{<$excl_var> cannot be specified with <$var_name> },
-                        qq{because argument "$arg_name" excludes <$excl_var>},
-                    )
+                    my $msg;
+                    if (exists $var->{excludes_error}) {
+                        $msg = $var->{excludes_error};
+                    } else {
+                        $msg = qq{Invalid "$excl_arg" argument.\n<$excl_var> }.
+                            qq{cannot be specified with <$var_name> because }.
+                            qq{argument "$arg_name" excludes <$excl_var>};
+                    }
+                    _bad_arglist($msg);                
                 }
             }
         }
@@ -1795,9 +1802,11 @@ that a placeholder excludes a list of other placeholders, for example:
 
     =for Euclid:
         v.excludes: h, w
+        v.excludes.error: Either set the volume or the height and weight
 
 Specifying both placeholders at the same time on the command-line will
-generate an error.
+generate an error. Note that the error message can be customized, as
+illustrated above.
 
 =head2 Argument cuddling
 
