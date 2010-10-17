@@ -660,18 +660,10 @@ sub _doesnt_match {
             next ARG
               if $error !~ m/\A [\s\0\1]* ($arg_spec_ref->{generic_matcher})/xms
                   || !$bad_type;
-
-            my $msg;
-            if ( $msg = $bad_type->{type_error} ) {
-                my $var = $bad_type->{var};
-                $var =~ s{\W+}{}gxms;
-                $msg =~ s{(?<!<)\b$var\b|\b$var\b(?!>)}{$bad_type->{val}}gxms;
-            }
-            else {
-                $msg = qq{$bad_type->{var} must be $bad_type->{type}}
-                  . qq{ but the supplied value ("$bad_type->{val}") isn't.};
-            }
-            return qq{Invalid "$bad_type->{arg}" argument\n$msg};
+            
+            my $msg = _type_error( $bad_type->{arg}, $bad_type->{var},
+                $bad_type->{val}, $bad_type->{type}, $bad_type->{type_error} );
+            return $msg;
         }
         return "Unknown argument: $error";
     }
@@ -773,14 +765,12 @@ sub _verify_args {
                             : $entry->{$var}
                           )
                         {
-                            _bad_arglist(
-                                qq{Invalid "$arg_name" argument.\n},
-                                qq{<$var> must be },
-                                $arg_vars->{$var}{constraint_desc},
-                                qq{ but the supplied value ("$val") isn't.}
-                              )
-                              if $arg_vars->{$var}{constraint}
-                                  && !$arg_vars->{$var}{constraint}->($val);
+                            if ( $arg_vars->{$var}{constraint} &&
+                                !$arg_vars->{$var}{constraint}->($val) ) {
+                                _bad_arglist( _type_error($arg_name, $var, $val,
+                                    $arg_vars->{$var}->{constraint_desc},
+                                    $arg_vars->{$var}->{type_error}) );
+                            }
                         }
                         next VAR;
                     }
@@ -793,14 +783,12 @@ sub _verify_args {
                             : $entry
                           )
                         {
-                            _bad_arglist(
-                                qq{Invalid "$arg_name" argument.\n},
-                                qq{<$var> must be },
-                                $arg_vars->{$var}{constraint_desc},
-                                qq{ but the supplied value ("$val") isn't.}
-                              )
-                              if $arg_vars->{$var}{constraint}
-                                  && !$arg_vars->{$var}{constraint}->($val);
+                            if ( $arg_vars->{$var}{constraint} &&
+                                !$arg_vars->{$var}{constraint}->($val) ) {
+                                _bad_arglist( _type_error( $arg_name, $var, $val,
+                                    $arg_vars->{$var}->{constraint_desc},
+                                    $arg_vars->{$var}->{type_error}) );
+                            }
                             $entry->{$var} = ''
                               unless defined( $ARGV{$arg_name} );
                         }
@@ -831,6 +819,22 @@ sub _verify_args {
         }
     }
 }
+
+
+sub _type_error {
+    my ($arg_name, $var_name, $var_val, $var_constraint, $var_error) = @_;
+    my $msg = qq{Invalid "$arg_name" argument.\n};
+    $var_name =~ s{\W+}{}gxms;
+    if ( $var_error ) {
+        $msg = $var_error;
+        $msg =~ s{(?<!<)\b$var_name\b|\b$var_name\b(?!>)}{$var_val}gxms;
+    } else {
+        $msg = qq{<$var_name> must be $var_constraint but the supplied value }.
+               qq{("$var_val") isn't.};
+    }
+    return $msg;
+}
+
 
 sub _convert_to_regex {
     my ($args_ref) = @_;
