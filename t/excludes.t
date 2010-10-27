@@ -7,6 +7,17 @@ BEGIN {
     *CORE::GLOBAL::exit = sub { die $stderr };
 }
 
+sub got_arg {
+    my ($key, $val) = @_;
+    is $ARGV{$key}, $val, "Got expected value for $key";
+}
+
+sub got_no_arg {
+    my ($key) = @_;
+    my $res = exists $ARGV{$key} ? 1 : 0;
+    is $res, 0, "Got expected absence of $key";
+}
+
 # Parse argument specs
 use Getopt::Euclid qw(:defer);
 
@@ -18,7 +29,7 @@ $H       = 2;
 $W       = -10;
 $TIMEOUT = 7;
 
-# Validate first set of args
+# Validate first set of args (exclusive params)
 @argv = (
     "-i   $INFILE",
     "-out=", $OUTFILE,
@@ -35,7 +46,7 @@ if (eval { Getopt::Euclid->process_args(\@argv); 1 }) {
     like $@, qr/excludes/ => 'Failed as expected';
 }
 
-# Validate second set of args
+# Validate second set of args (other exclusive params)
 @argv = (
     "-i   $INFILE",
     "-out=", $OUTFILE,
@@ -51,6 +62,21 @@ if (eval { Getopt::Euclid->process_args(\@argv); 1 }) {
 } else {
     like $@, qr/excludes/ => 'Failed as expected';
 }
+
+
+# Validate third set of args (exclusive default values)
+@argv = (
+    "-i   $INFILE",
+    "-out=", $OUTFILE,
+    '-v',
+    "--timeout $TIMEOUT",
+    7,
+);
+Getopt::Euclid->process_args(\@argv);
+
+got_arg '-length' => 24;
+got_no_arg '-h';
+got_no_arg '-w';
 
 
 
@@ -105,6 +131,10 @@ Specify output file
 
 Specify height and width
 
+=for Euclid:
+    h.default: 0.345
+    w.default: 1.09
+
 =item  -l[[en][gth]] <l>
 
 Display length [default: 24 ]
@@ -112,7 +142,7 @@ Display length [default: 24 ]
 =for Euclid:
     l.type:     int > 0
     l.default:  24
-    l.excludes: h
+    l.excludes: h,w
 
 =item  -girth <g>
 
@@ -145,6 +175,7 @@ Step size
 
 =for Euclid:
     step.type: int, lucky(step)
+    step.default: 123
 
 =item --version
 

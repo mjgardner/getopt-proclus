@@ -505,6 +505,7 @@ m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms
 sub _process_euclid_specs {
     my (@args) = @_;
     my %var_list;
+    my %excluded_by;
 
   ARG:
     for my $arg ( @args ) {
@@ -581,7 +582,9 @@ sub _process_euclid_specs {
                 eval "\$val = $val; 1"
                   or _fail("Invalid .default value: $spec\n($@)");
                 $arg->{var}{$var}{default} = $val;
-                $arg->{has_defaults} = 1;
+                $arg->{has_defaults} = exists $arg->{has_defaults} ?
+                                      $arg->{has_defaults}++ :
+                                      1;
             }
             elsif ( $field eq 'excludes.error' ) {
                 $arg->{var}{$var}{excludes_error} = $val;
@@ -593,6 +596,7 @@ sub _process_euclid_specs {
                         _fail( "Invalid .excludes value for variable <$var>: ".
                             "<$excl_var> cannot exclude itself\n" );
                     }
+                    $excluded_by{$excl_var} = $var;
                 }
             }
             else {
@@ -604,14 +608,20 @@ sub _process_euclid_specs {
         }
     }
 
-    # Validate .excludes specs
+    # Validate and complete .excludes specs
     for my $arg ( @args ) {
         for my $var (keys %{$arg->{var}}) {
+            # Check for invalid placeholder name in .excludes specifications
             for my $excl_var (@{$arg->{var}{$var}{excludes}}) {
                 if (not exists $var_list{$excl_var}) {
                     _fail( "Invalid .excludes value for variable <$var>: ".
                         "<$excl_var> does not exist\n" );
                 }
+            }
+            # Fill in placeholders that are excluded by others
+            if ( exists $excluded_by{$var} ) {
+              my $mut_var = $excluded_by{$var};
+              push @{$arg->{var}{$var}{excluded_by}}, $mut_var;
             }
         }
     }
@@ -704,8 +714,8 @@ sub _verify_args {
     my ($arg_specs_ref) = @_;
     # Check exclusive variables, variable constraints and fill in defaults...
 
-    # Enforce variables that exclude others
-    my %seen_vars;
+    # Handle mutually exclusive arguments
+    my %seen_vars; 
     for my $arg_name (keys %ARGV) {
         for my $elem (@{$ARGV{$arg_name}}) {
             for my $var_name (keys %$elem) {
@@ -717,25 +727,38 @@ sub _verify_args {
         my $arg = $arg_specs_ref->{$arg_name};
         for my $var_name ( keys %{$arg->{var}} ) {
             my $var = $arg->{var}->{$var_name};
-            for my $excl_var ( @{$var->{excludes}} ) {
+            # Enforce placeholders that cannot be specified with others
+            for my $excluded_var ( @{$var->{excludes}} ) {
                 if (exists $seen_vars{$var_name} &&
-                    exists $seen_vars{$excl_var}) {
-                    my $excl_arg = $seen_vars{$excl_var};
+                    exists $seen_vars{$excluded_var}) {
+                    my $excl_arg = $seen_vars{$excluded_var};
                     my $msg;
                     if (exists $var->{excludes_error}) {
                         $msg = $var->{excludes_error};
                     } else {
-                        $msg = qq{Invalid "$excl_arg" argument.\n<$excl_var> }.
+                        $msg =
+                            qq{Invalid "$excl_arg" argument.\n<$excluded_var> }.
                             qq{cannot be specified with <$var_name> because }.
-                            qq{argument "$arg_name" excludes <$excl_var>};
+                            qq{argument "$arg_name" excludes <$excluded_var>};
                     }
                     _bad_arglist($msg);                
+                }
+            }
+            # Default values do not apply to arguments excluded by others
+            for my $excludes_var ( @{$var->{excluded_by}} ) {
+                if (exists $seen_vars{$excludes_var}) {
+                    delete $arg_specs_ref->{$arg_name}{var}{$var_name}{default};
+                    $arg_specs_ref->{$arg_name}{has_defaults}--;
+                    if ($arg_specs_ref->{$arg_name}{has_defaults} == 0) {
+                        delete $arg_specs_ref->{$arg_name}{has_defaults};
+                    }
                 }
             }
         }
     }
     undef %seen_vars;
-    
+
+
     # Enforce constraints and fill in defaults...
   ARG:
     for my $arg_name ( keys %{$arg_specs_ref} ) {
@@ -1793,8 +1816,8 @@ You can refer to an argument default value in its POD entry as shown below:
 
 =head2 Exclusive placeholders
 
-Some arguments can be exclusive. In this case, it is possible to specify
-that a placeholder excludes a list of other placeholders, for example:
+Some arguments can be mutually exclusive. In this case, it is possible to
+specify that a placeholder excludes a list of other placeholders, for example:
 
     =item -height <h>
 
@@ -1815,6 +1838,10 @@ that a placeholder excludes a list of other placeholders, for example:
 Specifying both placeholders at the same time on the command-line will
 generate an error. Note that the error message can be customized, as
 illustrated above.
+
+When using exclusive arguments that have default values, the default value of
+the placeholder with the .excludes statement has precedence over any other
+placeholders.
 
 =head2 Argument cuddling
 
