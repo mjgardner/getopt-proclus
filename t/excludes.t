@@ -75,9 +75,25 @@ if (eval { Getopt::Euclid->process_args(\@argv); 1 }) {
 Getopt::Euclid->process_args(\@argv);
 
 got_arg '-length' => 24;
-got_no_arg '-h';
-got_no_arg '-w';
+got_no_arg 'size';
 
+use Data::Dumper;
+print Dumper(\%ARGV);
+
+# Validate fourth set of args (more exclusive default values)
+@argv = (
+    "-i   $INFILE",
+    "-out=", $OUTFILE,
+    "size ${H}x${W}",
+    '-v',
+    "--timeout $TIMEOUT",
+    7,
+);
+Getopt::Euclid->process_args(\@argv);
+
+is $ARGV{size}{h}, $H           => 'Got expected value for size <h>';
+is $ARGV{size}{w}, $W           => 'Got expected value for size <w>';
+got_no_arg '-size';
 
 
 sub lucky {
@@ -168,6 +184,7 @@ Test something spaced
 
 =for Euclid:
     space.excludes: step
+    space.default:  's p a c e'
 
 =item <step>
 

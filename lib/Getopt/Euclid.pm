@@ -745,8 +745,8 @@ sub _verify_args {
                 }
             }
             # Default values do not apply to arguments excluded by others
-            for my $excludes_var ( @{$var->{excluded_by}} ) {
-                if (exists $seen_vars{$excludes_var}) {
+            for my $excl_var ( @{$var->{excluded_by}}, @{$var->{excludes}} ) {
+                if (exists $seen_vars{$excl_var}) {
                     delete $arg_specs_ref->{$arg_name}{var}{$var_name}{default};
                     $arg_specs_ref->{$arg_name}{has_defaults}--;
                     if ($arg_specs_ref->{$arg_name}{has_defaults} == 0) {
@@ -754,6 +754,7 @@ sub _verify_args {
                     }
                 }
             }
+
         }
     }
     undef %seen_vars;
