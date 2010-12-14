@@ -52,6 +52,88 @@ is ref $ARGV{size}, 'HASH'      => 'Hash reference returned for size';
 is $ARGV{size}{h}, $H           => 'Got expected value for size <h>';
 is $ARGV{size}{w}, $W           => 'Got expected value for size <w>';
 
+# Manual should contain POD from .pl and .pm files
+my $man = '=head1 NAME
+
+ hier.t - Convert a file to Melkor\'s .orc format
+
+=head1 VERSION
+
+ This document refers to hier.t version 1.9.4 
+
+=head1 USAGE
+
+     hier.t -o= <file> -i <file> [options] 
+
+=head1 OPTIONS
+
+=over
+
+=item --version
+
+=item size <h>x<w>
+
+Specify height and width
+
+=item --man
+
+Print the usual program information
+
+=item --timeout [<min>] [<max>]
+
+=item -l[[en][gth]] <l>
+
+Display length [default: 24 ]
+
+=item --usage
+
+=item -v[erbose]
+
+Print all warnings
+
+=item --help
+
+=back
+
+
+
+=head1 AUTHOR
+
+Damian Conway (damian@conway.org)
+
+=head1 BUGS
+
+There are undoubtedly serious bugs lurking somewhere in this code.
+Bug reports and other feedback are most welcome.
+
+=head1 COPYRIGHT
+
+Copyright (c) 2002, Damian Conway. All Rights Reserved.
+This module is free software. It may be used, redistributed
+and/or modified under the terms of the Perl Artistic License
+  (see http://www.perl.com/perl/misc/Artistic.html)
+
+=cut
+
+=head1 REQUIRED ARGUMENTS
+
+=over
+
+=item -o[ut][file]= <file>
+
+Specify output file
+
+=item -i[nfile]  [=]<file>
+
+Specify input file
+
+=back
+
+
+';
+my $man_test = Getopt::Euclid->man();
+is $man_test, $man;
+
 __END__
 
 =head1 NAME

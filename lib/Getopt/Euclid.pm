@@ -340,12 +340,12 @@ sub _process_prog_pod {
                     }xms;
 
     # Clean up line delimeters
-    $man = join("\n\n", $source, reverse @pm_pods);
+    $man = join("\n=cut\n\n", $source, reverse @pm_pods);
     $man =~ s{ [\n\r] }{\n}gx;
 
     # Clean up significant entities...
     $man =~ s{ E<lt> }{<}gxms;
-    $man =~ s{ E<gt> }{>}gxms;    
+    $man =~ s{ E<gt> }{>}gxms;
 
     # Sanitize PODs by removing quoted strings that may contain POD text
     # FEA: this code is quite slow for long PODs!
