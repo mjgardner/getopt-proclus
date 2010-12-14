@@ -98,30 +98,17 @@ sub import {
     @_ = grep { !( /:defer/ and $defer = 1 ) } @_;
     croak "Unknown mode ('$_')" for @_;
 
-    # No automatic argument parsing in Perl compile mode (ticket 34195)
+    # No POD parsing and argument processing in Perl compile mode (ticket 34195)
     $defer = 1 if $^C;
 
-    # Sanity check
-    if ($has_run) {
-        carp "Getopt::Euclid loaded a second time";
-        warn "Second attempt to parse command-line was ignored\n";
-        return;
-    }
-
-    # Process POD of caller's Perl modules
-    if ( (caller)[1] =~ m/[.]pm \z/xms ) {
-        # Handle calls from .pm files...
-        _process_pm_pod();
-        return;
-    }
-
-    # Process POD of caller program
-    _process_prog_pod();
-    $has_run = 1;
+    # Parse POD of caller program and its modules
+    return unless Getopt::Euclid->process_pod();
 
     # Parse and export arguments 
     Getopt::Euclid->process_args( \@ARGV ) unless $defer;
 }
+
+
 
 sub man {
     shift @_;
@@ -141,6 +128,32 @@ sub help {
 sub version {
     shift @_;
     return $version;
+}
+
+
+sub process_pod {
+    # Parse the POD of the caller program and its modules.
+    my ($self) = @_;
+    my @caller = caller(1);
+
+    # Sanity check
+    if ($has_run) {
+        carp "Getopt::Euclid loaded a second time";
+        warn "Second attempt to parse command-line was ignored\n";
+        return 0;
+    }
+
+    # Handle calls from .pm files...
+    if ( $caller[1] =~ m/[.]pm \z/xms ) {
+        _process_pm_pod();
+        return 0;
+    }
+
+    # Process POD of caller program
+    _process_prog_pod();
+    $has_run = 1;
+
+    return 1;
 }
 
 sub process_args {
@@ -1021,9 +1034,9 @@ sub _longestname {
 
 sub _export_var {
     my ( $prefix, $key, $value ) = @_;
+    my $callpkg = caller(2+($Exporter::ExportLevel || 0)); # at import()'s level
     my $export_as = $prefix . $key;
     $export_as =~ s{\W}{_}gxms;    # mainly for '-'
-    my $callpkg = caller(2+($Exporter::ExportLevel || 0)); # at import()'s level
     no strict 'refs';
     *{"$callpkg\::$export_as"} = ( ref $value ) ? $value : \$value;
 }
@@ -1049,7 +1062,7 @@ sub _fail {
 
 
 sub _process_pm_pod {
-    my @caller = caller(1); # at import()'s level
+    my @caller = caller(2); # at import()'s level
 
     # Save module's POD...
     open my $fh, '<', $caller[1]
