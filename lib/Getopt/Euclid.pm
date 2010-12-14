@@ -99,15 +99,15 @@ sub import {
     croak "Unknown mode ('$_')" for @_;
 
     # No POD parsing and argument processing in Perl compile mode (ticket 34195)
-    $defer = 1 if $^C;
+    return if $^C;
 
     # Parse POD of caller program and its modules
-    return unless Getopt::Euclid->process_pod();
+    return unless _process_pod();
 
     # Parse and export arguments 
     Getopt::Euclid->process_args( \@ARGV ) unless $defer;
-}
 
+}
 
 
 sub man {
@@ -115,46 +115,24 @@ sub man {
     return $man;
 }
 
+
 sub usage {
     shift @_;
     return $usage;
 }
+
 
 sub help {
     shift @_;
     return $help;
 }
 
+
 sub version {
     shift @_;
     return $version;
 }
 
-
-sub process_pod {
-    # Parse the POD of the caller program and its modules.
-    my ($self) = @_;
-    my @caller = caller(1);
-
-    # Sanity check
-    if ($has_run) {
-        carp "Getopt::Euclid loaded a second time";
-        warn "Second attempt to parse command-line was ignored\n";
-        return 0;
-    }
-
-    # Handle calls from .pm files...
-    if ( $caller[1] =~ m/[.]pm \z/xms ) {
-        _process_pm_pod();
-        return 0;
-    }
-
-    # Process POD of caller program
-    _process_prog_pod();
-    $has_run = 1;
-
-    return 1;
-}
 
 sub process_args {
     # Take a reference to an array of arguments (\@ARGV or other), parse the
@@ -201,7 +179,6 @@ sub process_args {
     }
 
     # Check all requireds have been found...
-
     my @missing;
     for my $req ( keys %requireds_hash ) {
         push @missing, "\t$req\n" if !exists $ARGV{$req};
@@ -290,6 +267,7 @@ sub process_args {
     if ($minimal_keys) {
         _minimize_entries_of( \%ARGV );
     }
+
 }
 
 # ###### Utility subs #############
@@ -304,19 +282,36 @@ sub AUTOLOAD {
 }
 
 
-sub _process_prog_pod {
+sub _process_pod {
+    # Parse the POD of the caller program and its modules.
+    my @caller = caller(1);
 
+    # Sanity check
+    if ($has_run) {
+        carp "Getopt::Euclid loaded a second time";
+        warn "Second attempt to parse command-line was ignored\n";
+        return 0;
+    }
+
+    # Handle calls from .pm files...
+    if ( $caller[1] =~ m/[.]pm \z/xms ) {
+        _process_pm_pod();
+        return 0;
+    }
+
+    # Process POD of caller program
+    _process_prog_pod();
+    $has_run = 1;
+
+    return 1;
+}
+
+
+sub _process_prog_pod {
     # Acquire POD source...
     open my $fh, '<', $0
       or croak "Getopt::Euclid was unable to access POD\n($!)\nProblem was";
     my $source = do { local $/; <$fh> };
-
-    # Clean up line delimeters
-    s{ [\n\r] }{\n}gx foreach ( $source, @pm_pods );
-
-    # Clean up significant entities...
-    $source =~ s{ E<lt> }{<}gxms;
-    $source =~ s{ E<gt> }{>}gxms;
 
     # Set up parsing rules...
     my $HWS     = qr{ [^\S\n]*      }xms;
@@ -344,31 +339,43 @@ sub _process_prog_pod {
                         )
                     }xms;
 
-    # Sanitize source by removing quoted strings that may contain POD text
-    for my $quoted ( # Extract next quoted string from source
-        extract_multiple($source, [sub{extract_quotelike($_[0])}], undef, 1) ) {
-        
-        my $to_match = quotemeta($quoted);
-        if ( $source !~ m{ ($POD_CMD .*?) $to_match .*? (?: $POD_CUT | \z ) }xms ) {
-            # Quoted string is not located in a POD, remove it
-            $source =~ s{$to_match}{}xms;
+    # Sanitize PODs
+    my @pods = ($source, reverse @pm_pods);
+    for my $i (0 .. $#pods ) {
+
+        # Clean up line delimeters
+        $pods[$i] =~ s{ [\n\r] }{\n}gx;
+
+        # Clean up significant entities...
+        $pods[$i] =~ s{ E<lt> }{<}gxms;
+        $pods[$i] =~ s{ E<gt> }{>}gxms;
+
+        # Sanitize PODs by removing quoted strings that may contain POD text
+        # FEA: this code is quite slow for long PODs!
+        for my $quoted (
+            extract_multiple($pods[$i], [sub{extract_quotelike($_[0])}], undef, 1) ) {
+            my $to_match = quotemeta($quoted);
+            if ( $pods[$i] !~ m{ ($POD_CMD .*?) $to_match .*? (?: $POD_CUT | \z ) }xms ) {
+                # Quoted string is not located in a POD, remove it
+                $pods[$i] =~ s{$to_match}{}xms;
+            }
         }
 
     }
 
-    # Extract POD from sanitized source...
-    my @chunks = $source =~ m{ $POD_CMD .*? (?: $POD_CUT | \z ) }gxms;
-    $man = join "\n\n", @chunks;
+    # Generate man by concatenate sanitized PODs
+    for my $pod (@pods) {
+        $man .= join "\n\n", $pod =~ m{ $POD_CMD .*? (?: $POD_CUT | \z ) }gxms;
+    }
 
-    # Extract name info
+    # Put program name in man
     ($SCRIPT_NAME) = ( splitpath($0) )[-1];
-
     $man =~ s{ ^(=head1 $NAME \s*) .*? (- .*)? $EOHEAD }
-            {join(' ', $1, $SCRIPT_NAME, $2 || "\n\n" )}xems;
+             {join(' ', $1, $SCRIPT_NAME, $2 || "\n\n" )}xems;
 
-    # Extract version info
+    # Put version number in man
     ($SCRIPT_VERSION) = 
-      $man =~ m/^=head1 $VERS .*? (\d+(?:[._]\d+)+) .*? $EOHEAD /xms;
+        $man =~ m/^=head1 $VERS .*? (\d+(?:[._]\d+)+) .*? $EOHEAD /xms;
     if ( !defined $SCRIPT_VERSION ) {
         $SCRIPT_VERSION = $main::VERSION;
     }
@@ -376,37 +383,37 @@ sub _process_prog_pod {
 	     my $filedate = localtime((stat $0)[9]);
         $SCRIPT_VERSION = $filedate;
     }
-
     $man =~ s{ ^(=head1 $VERS    \s*) .*? (\s*) $EOHEAD }
-            {$1 This document refers to $SCRIPT_NAME version $SCRIPT_VERSION $2}xms;
+             {$1 This document refers to $SCRIPT_NAME version $SCRIPT_VERSION $2}xms;
 
-    # Extract other info from caller's pod
-    my ($opt_name, $options) =  $man =~ m/^=head1 ($OPTIONS)  (.*?) $EOHEAD /xms;
-
-    my ($req_name, $required) = $man =~ m/^=head1 ($REQUIRED) (.*?) $EOHEAD /xms;
-
-    my ($licence) = $man =~ 
-m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms;
-
-    # Extra info from higher-level pod...
-    for my $pm_pod ( reverse @pm_pods ) {
-        my ( undef, $more_options ) =
-          $pm_pod =~ m/^=head1 ($OPTIONS)  (.*?) $EOHEAD /xms;
-        $options = ( $more_options || q{} ) . ( $options || q{} );
-
-        my ( undef, $more_required ) =
-          $pm_pod =~ m/^=head1 ($REQUIRED) (.*?) $EOHEAD /xms;
+    # Extra info from PODs
+    my $options;
+    my $opt_name;
+    my $required;
+    my $req_name;
+    my $licence;
+    for my $pod ( @pods ) {
+        # Required arguments
+        my ( $more_req_name, $more_required ) =
+          $pod =~ m/^=head1 ($REQUIRED) (.*?) $EOHEAD /xms;
+        $req_name = $more_req_name if not defined $req_name;
         $required = ( $more_required || q{} ) . ( $required || q{} );
 
-        my ($more_licence) = $pm_pod =~
-m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms;
+        # Optional arguments
+        my ( $more_opt_name, $more_options ) =
+          $pod =~ m/^=head1 ($OPTIONS)  (.*?) $EOHEAD /xms;
+        $opt_name = $more_opt_name if not defined $opt_name;
+        $options = ( $more_options || q{} ) . ( $options || q{} );
+
+        # License information
+        my ($more_licence) =
+          $pod =~ m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms;
         $licence = ( $more_licence || q{} ) . ( $licence || q{} );
     }
 
     # Clean up interface titles...
-  NAME:
     for my $name ( $opt_name, $req_name ) {
-        next NAME if !defined $name;
+        next if !defined $name;
         $name =~ s{\A \s+ | \s+ \z}{}gxms;
     }
 
@@ -417,40 +424,26 @@ m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms
     # Convert each arg entry to a hash...
     my $seq_num = 0;
     my %seen;
-
-    while ( my ($name, $spec) = each %requireds ) {
-        my @variants = _get_variants($name);
-        $requireds_hash{$name} = {
-            seq      => $seq_num++,
-            src      => $spec,
-            name     => $name,
-            variants => \@variants,
-        };
-        if ($minimal_keys) {
-            my $minimal = _minimize_name($name);
-            croak "Internal error: minimalist mode caused arguments",
-              "'$name' and '$seen{$minimal}' to clash"
-              if $seen{$minimal};
-            $seen{$minimal} = $name;
+    for my $pair( [\%requireds, \%requireds_hash],
+                  [\%options, \%options_hash]      ) {
+        my ($spec, $storage) = @$pair;
+        while ( my ($name, $spec) = each %$spec ) {
+            my @variants = _get_variants($name);
+            $$storage{$name} = {
+                seq      => $seq_num++,
+                src      => $spec,
+                name     => $name,
+                variants => \@variants,
+            };
+            if ($minimal_keys) {
+                my $minimal = _minimize_name($name);
+                croak "Internal error: minimalist mode caused arguments",
+                   "'$name' and '$seen{$minimal}' to clash"
+                   if $seen{$minimal};
+                $seen{$minimal} = $name;
+            }
+            $long_names_hash{ _longestname(@variants) } = $name;
         }
-        $long_names_hash{ _longestname(@variants) } = $name;
-    }
-    while ( my ($name, $spec) = each %options ) {
-        my @variants = _get_variants($name);
-        $options_hash{$name} = {
-            seq      => $seq_num++,
-            src      => $spec,
-            name     => $name,
-            variants => \@variants,
-        };
-        if ($minimal_keys) {
-            my $minimal = _minimize_name($name);
-            croak "Internal error: minimalist mode caused arguments",
-              "'$name' and '$seen{$minimal}' to clash"
-              if $seen{$minimal};
-            $seen{$minimal} = $name;
-        }
-        $long_names_hash{ _longestname(@variants) } = $name;
     }
     _minimize_entries_of( \%long_names_hash );
 
