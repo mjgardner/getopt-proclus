@@ -339,34 +339,27 @@ sub _process_prog_pod {
                         )
                     }xms;
 
-    # Sanitize PODs
-    my @pods = ($source, reverse @pm_pods);
-    for my $i (0 .. $#pods ) {
+    # Clean up line delimeters
+    $man = join("\n\n", $source, reverse @pm_pods);
+    $man =~ s{ [\n\r] }{\n}gx;
 
-        # Clean up line delimeters
-        $pods[$i] =~ s{ [\n\r] }{\n}gx;
+    # Clean up significant entities...
+    $man =~ s{ E<lt> }{<}gxms;
+    $man =~ s{ E<gt> }{>}gxms;    
 
-        # Clean up significant entities...
-        $pods[$i] =~ s{ E<lt> }{<}gxms;
-        $pods[$i] =~ s{ E<gt> }{>}gxms;
-
-        # Sanitize PODs by removing quoted strings that may contain POD text
-        # FEA: this code is quite slow for long PODs!
-        for my $quoted (
-            extract_multiple($pods[$i], [sub{extract_quotelike($_[0])}], undef, 1) ) {
-            my $to_match = quotemeta($quoted);
-            if ( $pods[$i] !~ m{ ($POD_CMD .*?) $to_match .*? (?: $POD_CUT | \z ) }xms ) {
-                # Quoted string is not located in a POD, remove it
-                $pods[$i] =~ s{$to_match}{}xms;
-            }
+    # Sanitize PODs by removing quoted strings that may contain POD text
+    # FEA: this code is quite slow for long PODs!
+    for my $quoted (
+        extract_multiple($man, [sub{extract_quotelike($_[0])}], undef, 1) ) {
+        my $to_match = quotemeta($quoted);
+        if ( $man !~ m{ ($POD_CMD .*?) $to_match .*? (?: $POD_CUT | \z ) }xms ) {
+            # Quoted string is not located in a POD, remove it
+            $man =~ s{$to_match}{}xms;
         }
-
     }
 
-    # Generate man by concatenate sanitized PODs
-    for my $pod (@pods) {
-        $man .= join "\n\n", $pod =~ m{ $POD_CMD .*? (?: $POD_CUT | \z ) }gxms;
-    }
+    # Extract POD alone...
+    $man = join "\n\n", $man =~ m{ $POD_CMD .*? (?: $POD_CUT | \z ) }gxms;
 
     # Put program name in man
     ($SCRIPT_NAME) = ( splitpath($0) )[-1];
@@ -387,27 +380,22 @@ sub _process_prog_pod {
              {$1 This document refers to $SCRIPT_NAME version $SCRIPT_VERSION $2}xms;
 
     # Extra info from PODs
-    my $options;
-    my $opt_name;
-    my $required;
-    my $req_name;
-    my $licence;
-    for my $pod ( @pods ) {
+    my ($options, $opt_name, $required, $req_name, $licence);
+    while ($man =~ m/^=head1 ($REQUIRED) (.*?) $EOHEAD /gxms) {
         # Required arguments
-        my ( $more_req_name, $more_required ) =
-          $pod =~ m/^=head1 ($REQUIRED) (.*?) $EOHEAD /xms;
+        my ( $more_req_name, $more_required ) = ($1, $2);
         $req_name = $more_req_name if not defined $req_name;
         $required = ( $more_required || q{} ) . ( $required || q{} );
-
+    }
+    while ($man =~ m/^=head1 ($OPTIONS)  (.*?) $EOHEAD /gxms) {
         # Optional arguments
-        my ( $more_opt_name, $more_options ) =
-          $pod =~ m/^=head1 ($OPTIONS)  (.*?) $EOHEAD /xms;
+        my ( $more_opt_name, $more_options ) = ($1, $2);
         $opt_name = $more_opt_name if not defined $opt_name;
         $options = ( $more_options || q{} ) . ( $options || q{} );
-
+    }
+    while ($man =~ m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /gxms) {
         # License information
-        my ($more_licence) =
-          $pod =~ m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms;
+        my ($more_licence) = ($1, $2);
         $licence = ( $more_licence || q{} ) . ( $licence || q{} );
     }
 
