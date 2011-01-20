@@ -28,7 +28,6 @@ my $version; # --version message
 our $SCRIPT_NAME;
 our $SCRIPT_VERSION; # for ticket # 55259
 
-# Looks unneeded -Kevin
 # END { $has_run = 1 }
 
 my $OPTIONAL;
@@ -2207,8 +2206,6 @@ L<http://rt.cpan.org>.
 =head1 AUTHOR
 
 Damian Conway  C<< <DCONWAY@cpan.org> >>
-
-Kevin Galinsky C<< <kgalinsky+cpan at gmail.com> >>
 
 Florent Angly C<< <florent.angly@gmail.com> >>
 
