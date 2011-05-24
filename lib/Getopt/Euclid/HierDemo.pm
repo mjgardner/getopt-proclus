@@ -29,6 +29,8 @@ __END__
 testmatrix url annocpan anno bugtracker rt cpants kwalitee diff irc mailto
 metadata placeholders
 
+=encoding utf-8
+
 =head1 NAME
 
 Getopt::Euclid::HierDemo - Module for hier*.t tests
