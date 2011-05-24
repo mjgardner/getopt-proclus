@@ -830,7 +830,8 @@ sub _print_and_exit {
         open my $pod_handle, '<', \$pod;
         my $parser = Pod::Text->new( sentence => 0, width => 78 );
         $parser->parse_from_filehandle($pod_handle);
-        close $pod_handle;
+
+        #        close $pod_handle;
     }
     else {
         print $pod;
