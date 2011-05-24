@@ -13,7 +13,6 @@ use Modern::Perl;
 use Test::More 'no_plan';
 
 BEGIN {
-    require 5.006_001 or plan 'skip_all';
     close *STDERR;
     open *STDERR, '>', \my $stderr;
     *CORE::GLOBAL::exit = sub { die $stderr };
