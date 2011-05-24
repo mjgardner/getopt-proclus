@@ -296,7 +296,7 @@ ARG:
         my @false_vals;
         while ( $info =~ s{^ \s* false \s*[:=] \s* ([^\n]*)}{}xms ) {
             my $regex = $1;
-            1 while $regex =~ s/ \[ ([^]]*) \] /(?:$1)?/gxms;
+            while ( $regex =~ s/ \[ ([^]]*) \] /(?:$1)?/gxms ) {1}
             $regex =~ s/ (\s+) /$1.'[\\s\\0\\1]*'/egxms;
             push @false_vals, $regex;
         }
@@ -384,23 +384,26 @@ ARG:
 
     # Handle standard args...
     given ( \@ARGV ) {
+        no warnings 'closure';
         when ( grep {/ --man /xms} @{$_} ) {
             _print_and_exit( $pod, 'paged' )
         }
-        when ( first { $_ eq '--usage' } @{$_} ) {
+        when ( first { $_ and $_ eq '--usage' } @{$_} ) {
             say "Usage: $prog_name $arg_summary\n",
                 "       $prog_name --help";
             exit;
         }
-        when ( first { $_ eq '--help' } @{$_} ) {
+        when ( first { $_ and $_ eq '--help' } @{$_} ) {
             my $pod = "=head1 Usage:\n\n$prog_name $arg_summary\n\n";
-            $pod .= "=head1 \L\u$req_name:\E\E\n\n$required\n\n"
-                if ( $required || q{} ) =~ /\S/;
-            $pod .= "=head1 \L\u$opt_name:\E\E\n\n$options\n\n"
-                if ( $options || q{} ) =~ /\S/;
+            if ( ( $required || q{} ) =~ /\S/ ) {
+                $pod .= "=head1 \L\u$req_name:\E\E\n\n$required\n\n";
+            }
+            if ( ( $options || q{} ) =~ /\S/ ) {
+                $pod .= "=head1 \L\u$opt_name:\E\E\n\n$options\n\n";
+            }
             _print_and_exit($pod);
         }
-        when ( first { $_ eq '--version' } @{$_} ) {
+        when ( first { $_ and $_ eq '--version' } @{$_} ) {
             say "This is $prog_name version $SCRIPT_VERSION";
             if ($licence) { say "\n$licence" }
             exit;
@@ -448,12 +451,8 @@ ARG:
     }
 
     # Check all requireds have been found...
+    my @missing = map {"\t$_\n"} grep { !exists $ARGV{$_} } keys %requireds;
 
-    my @missing;
-    for my $req ( keys %requireds ) {
-        push @missing, "\t$req\n"
-            if !exists $ARGV{$req};
-    }
     _bad_arglist(
         'Missing required argument',
         ( @missing == 1 ? q{} : q{s} ),
