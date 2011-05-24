@@ -83,9 +83,6 @@ sub _fail {
 my $has_run;
 my @std_POD;
 
-# Looks unneeded -Kevin
-# END { $has_run = 1 }
-
 sub Getopt::Euclid::Importer::DESTROY {
     return if $has_run || $COMPILING;    # No errors when only compiling
     croak
