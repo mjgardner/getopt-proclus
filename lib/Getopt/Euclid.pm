@@ -276,12 +276,12 @@ ARG:
     for my $arg ( values %requireds, values %options ) {
         $arg->{src} =~ s{^ =for \s+ Euclid\b [^\n]* \s* (.*) \z}{}ixms
             or next ARG;
-        my $info = $1;
+        my $for_text = $1;
 
-        $arg->{is_repeatable} = $info =~ s{^ \s* repeatable \s*? $}{}xms;
+        $arg->{is_repeatable} = $for_text =~ s{^ \s* repeatable \s*? $}{}xms;
 
         my @false_vals;
-        while ( $info =~ s{^ \s* false \s*[:=] \s* ([^\n]*)}{}xms ) {
+        while ( $for_text =~ s{^ \s* false \s*[:=] \s* ([^\n]*)}{}xms ) {
             my $regex = $1;
             while ( $regex =~ s/ \[ ([^]]*) \] /(?:$1)?/gxms ) {1}
             $regex =~ s/ (\s+) /$1.'[\\s\\0\\1]*'/egxms;
@@ -291,7 +291,7 @@ ARG:
             $arg->{false_vals} = '(?:' . join( q{|}, @false_vals ) . ')';
         }
 
-        while ( $info
+        while ( $for_text
             =~ m{\G \s* (([^.]+)[.]([^:=\s]+) \s*[:=]\s* ([^\n]*)) }gcxms )
         {
             my ( $spec, $var, $field, $val ) = ( $1, $2, $3, $4 );
@@ -347,7 +347,7 @@ ARG:
                 _fail("Unknown specification: $spec");
             }
         }
-        if ( $info =~ m{\G \s* ([^\s\0\1] [^\n]*) }gcxms ) {
+        if ( $for_text =~ m{\G \s* ([^\s\0\1] [^\n]*) }gcxms ) {
             _fail("Unknown specification: $1");
         }
     }
@@ -381,14 +381,14 @@ ARG:
             exit;
         }
         when ( first { $_ and $_ eq '--help' } @{$_} ) {
-            my $pod = "=head1 Usage:\n\n$prog_name $arg_summary\n\n";
+            my $usage_pod = "=head1 Usage:\n\n$prog_name $arg_summary\n\n";
             if ( ( $required || q{} ) =~ /\S/ ) {
-                $pod .= "=head1 \L\u$req_name:\E\E\n\n$required\n\n";
+                $usage_pod .= "=head1 \L\u$req_name:\E\E\n\n$required\n\n";
             }
             if ( ( $options || q{} ) =~ /\S/ ) {
-                $pod .= "=head1 \L\u$opt_name:\E\E\n\n$options\n\n";
+                $usage_pod .= "=head1 \L\u$opt_name:\E\E\n\n$options\n\n";
             }
-            _print_and_exit($pod);
+            _print_and_exit($usage_pod);
         }
         when ( first { $_ and $_ eq '--version' } @{$_} ) {
             say "This is $prog_name version $SCRIPT_VERSION";
@@ -703,8 +703,9 @@ ARG:
                                     qq{ but the supplied value ("$val") isn't.},
                                 );
                             }
-                            $entry->{$var} = q{}
-                                unless defined $ARGV{$arg_name};
+                            if ( !defined $ARGV{$arg_name} ) {
+                                $entry->{$var} = q{};
+                            }
                         }
                         next VAR;
                     }
