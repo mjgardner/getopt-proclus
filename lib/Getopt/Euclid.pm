@@ -177,8 +177,8 @@ sub import {
     my $STD = qr{ STANDARD | STD  };
     my $ARG = qr{ $HWS ARG(?:UMENT)?S? };
 
-    my $OPTIONS  = qr{ $HWS $STD? $HWS OPTION(?:AL|S)? $ARG? $HWS \n };
-    my $REQUIRED = qr{ $HWS $STD? $HWS REQUIRED        $ARG? $HWS \n };
+    my $OPTIONS  = qr{ $HWS $STD? $HWS OPTION(?:AL|S)? $ARG? $HWS \n }xms;
+    my $REQUIRED = qr{ $HWS $STD? $HWS REQUIRED        $ARG? $HWS \n }xms;
 
     my $EUCLID_ARG = qr{ ^=item \s* ([^\n]*?) \s* \n\s*\n
                         (
