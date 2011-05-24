@@ -1,6 +1,6 @@
 severity = brutal
 verbose = 8
-exclude = Editor::RequireEmacsFileVariables Miscellanea::RequireRcsKeywords Modules::RequireExplicitInclusion Modules::RequireExplicitPackage Tics::ProhibitLongLines Modules::RequirePerlVersion BuiltinFunctions::ProhibitStringyEval ValuesAndExpressions::ProhibitEmptyQuotes
+exclude = Editor::RequireEmacsFileVariables Miscellanea::RequireRcsKeywords Modules::RequireExplicitInclusion Modules::RequireExplicitPackage Tics::ProhibitLongLines Modules::RequirePerlVersion BuiltinFunctions::ProhibitStringyEval ValuesAndExpressions::ProhibitEmptyQuotes Compatibility::ProhibitThreeArgumentOpen
 
 [Lax::RequireExplicitPackage::ExceptForPragmata]
 allowed_pragmata = perlversion strict warnings utf8 Modern::Perl
@@ -21,7 +21,7 @@ lib_sections = NAME | VERSION | SYNOPSIS | DESCRIPTION | SUPPORT | AUTHORS | COP
 script_sections = NAME | USAGE | DESCRIPTION | CONFIGURATION | SUPPORT | AUTHORS | COPYRIGHT AND LICENSE
 
 [Subroutines::ProhibitCallsToUndeclaredSubs]
-exempt_subs = Carp::croak
+exempt_subs = Carp::carp Carp::croak
 
 [TestingAndDebugging::RequireUseStrict]
 equivalent_modules = Modern::Perl
