@@ -8,6 +8,8 @@ allowed_pragmata = perlversion strict warnings utf8
 [CodeLayout::RequireTidyCode]
 perltidyrc = xt/author/perltidy.rc
 
+[Compatibility::PerlMinimumVersionAndWhy]
+above_version = 5.010
 [Compatibility::PodMinimumVersion]
 above_version = 5.010
 

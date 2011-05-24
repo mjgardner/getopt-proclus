@@ -29,7 +29,7 @@ __END__
 testmatrix url annocpan anno bugtracker rt cpants kwalitee diff irc mailto
 metadata placeholders
 
-=encoding utf-8
+=encoding utf8
 
 =head1 NAME
 
