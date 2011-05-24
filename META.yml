@@ -12,6 +12,7 @@ build_requires:
   Scalar::Util: 0
   Test::More: 0.94
   perl: 5.006_001
+  vars: 0
 configure_requires:
   ExtUtils::MakeMaker: 6.30
 dynamic_config: 0

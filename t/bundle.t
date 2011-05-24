@@ -11,6 +11,7 @@ use utf8;
 use Modern::Perl;
 
 use Readonly;
+use vars qw($INFILE $OUTFILE $LEN $H $W $TIMEOUT);
 
 BEGIN {
     Readonly our $INFILE  => 1;

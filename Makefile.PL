@@ -18,7 +18,8 @@ my %WriteMakefileArgs = (
     'Readonly' => '0',
     'Scalar::Util' => '0',
     'Test::More' => '0.94',
-    'perl' => '5.006_001'
+    'perl' => '5.006_001',
+    'vars' => '0'
   },
   'CONFIGURE_REQUIRES' => {
     'ExtUtils::MakeMaker' => '6.30'
