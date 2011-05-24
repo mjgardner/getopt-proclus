@@ -65,11 +65,11 @@ This documentation refers to orchestrate version 1.9.4
 
 =over
 
-=item  -i[nfile]    
+=item  -i[nfile]
 
 Specify input file
 
-=item  -o[ut][file]    
+=item  -o[ut][file]
 
 Specify output file
 
