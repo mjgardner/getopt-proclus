@@ -1,16 +1,29 @@
 severity = brutal
 verbose = 8
-exclude = Editor::RequireEmacsFileVariables Miscellanea::RequireRcsKeywords Modules::RequireExplicitInclusion Modules::RequireExplicitPackage Tics::ProhibitLongLines Documentation::RequirePODUseEncodingUTF8
+exclude = Editor::RequireEmacsFileVariables Miscellanea::RequireRcsKeywords Modules::RequireExplicitInclusion Modules::RequireExplicitPackage Tics::ProhibitLongLines Modules::RequirePerlVersion
 
 [Lax::RequireExplicitPackage::ExceptForPragmata]
-allowed_pragmata = perlversion strict warnings utf8
+allowed_pragmata = perlversion strict warnings utf8 Modern::Perl
 
 [CodeLayout::RequireTidyCode]
 perltidyrc = xt/author/perltidy.rc
 
+[Compatibility::PerlMinimumVersionAndWhy]
+above_version = 5.010
+[Compatibility::PodMinimumVersion]
+above_version = 5.010
+
 [Documentation::PodSpelling]
-stop_words = bugtracker Perldoc perldoc annonations PASSed
+stop_words = bugtracker Perldoc perldoc annonations PASSed callee CLI perl automagically prepended substring multi LICENCE whitespace whitespacing boolean et cetera Unflagged unflagged syntaxes namespace satisify placeholder's behaviours
 
 [Documentation::RequirePodSections]
-lib_sections = NAME | VERSION | SYNOPSIS | DESCRIPTION | SUPPORT | AUTHOR | COPYRIGHT AND LICENSE
-script_sections = NAME | USAGE | DESCRIPTION | CONFIGURATION | SUPPORT | AUTHOR | COPYRIGHT AND LICENSE
+lib_sections = NAME | VERSION | SYNOPSIS | DESCRIPTION | SUPPORT | AUTHORS | COPYRIGHT AND LICENSE
+script_sections = NAME | USAGE | DESCRIPTION | CONFIGURATION | SUPPORT | AUTHORS | COPYRIGHT AND LICENSE
+
+[Subroutines::ProhibitCallsToUndeclaredSubs]
+exempt_subs = Carp::croak
+
+[TestingAndDebugging::RequireUseStrict]
+equivalent_modules = Modern::Perl
+[TestingAndDebugging::RequireUseWarnings]
+equivalent_modules = Modern::Perl
