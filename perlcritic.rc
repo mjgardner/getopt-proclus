@@ -3,7 +3,7 @@ verbose = 8
 exclude = Editor::RequireEmacsFileVariables Miscellanea::RequireRcsKeywords Modules::RequireExplicitInclusion Modules::RequireExplicitPackage Tics::ProhibitLongLines Modules::RequirePerlVersion
 
 [Lax::RequireExplicitPackage::ExceptForPragmata]
-allowed_pragmata = perlversion strict warnings utf8
+allowed_pragmata = perlversion strict warnings utf8 Modern::Perl
 
 [CodeLayout::RequireTidyCode]
 perltidyrc = xt/author/perltidy.rc
