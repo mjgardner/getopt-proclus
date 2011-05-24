@@ -3,6 +3,7 @@ package Getopt::Euclid;
 # ABSTRACT: Executable Uniform Command-Line Interface Descriptions
 
 use Carp;
+use English '-no_match_vars';
 use File::Spec::Functions qw(splitpath);
 use List::Util qw( first );
 
@@ -35,11 +36,11 @@ my %STD_CONSTRAINT_FOR = (
     'number'    => sub {1},              # Always okay (matcher ensures this)
     '+number'   => sub { $_[0] > 0 },
     '0+number'  => sub { $_[0] >= 0 },
-    'input' => sub { $_[0] eq '-' || -r $_[0] },
+    'input' => sub { $_[0] eq q{-} || -r $_[0] },
     'output' => sub {
         my ( undef, $dir ) = splitpath( $_[0] );
-        $dir ||= '.';
-        $_[0] eq '-' ? 1 : -e $_[0] ? -w $_[0] : -w $dir;
+        $dir ||= q{.};
+        $_[0] eq q{-} ? 1 : -e $_[0] ? -w $_[0] : -w $dir;
     },
 );
 
@@ -64,7 +65,7 @@ sub _make_equivalent {
     my ( $hash_ref, %alias_hash ) = @_;
 
     while ( my ( $name, $aliases ) = each %alias_hash ) {
-        foreach my $alias (@$aliases) {
+        foreach my $alias ( @{$aliases} ) {
             $hash_ref->{$alias} = $hash_ref->{$name};
         }
     }
@@ -86,7 +87,7 @@ my @std_POD;
 # END { $has_run = 1 }
 
 sub Getopt::Euclid::Importer::DESTROY {
-    return if $has_run || $^C;    # No errors when only compiling
+    return if $has_run || $COMPILING;    # No errors when only compiling
     croak
         '.pm file cannot define an explicit import() when using Getopt::Euclid';
 }
@@ -104,7 +105,7 @@ sub import {
     croak "Unknown mode ('$_')" for @_;
 
     if ($has_run) {
-        carp "Getopt::Euclid loaded a second time";
+        carp 'Getopt::Euclid loaded a second time';
         warn "Second attempt to parse command-line was ignored\n";
         return;
     }
@@ -116,8 +117,8 @@ sub import {
         # Save module's POD...
         open my $fh, '<', $caller[1]
             or croak
-            "Getopt::Euclid was unable to access POD\n($!)\nProblem was";
-        push @std_POD, do { local $/; <$fh> };
+            "Getopt::Euclid was unable to access POD\n($OS_ERROR)\nProblem was";
+        push @std_POD, do { local $INPUT_RECORD_SEPARATOR; <$fh> };
 
         # Install this import() sub as module's import sub...
         no strict 'refs';
@@ -136,9 +137,10 @@ sub import {
     $has_run = 1;
 
     # Acquire POD source...
-    open my $fh, '<', $0
-        or croak "Getopt::Euclid was unable to access POD\n($!)\nProblem was";
-    my $source = do { local $/; <$fh> };
+    open my $fh, '<', $PROGRAM_NAME
+        or croak
+        "Getopt::Euclid was unable to access POD\n($OS_ERROR)\nProblem was";
+    my $source = do { local $INPUT_RECORD_SEPARATOR; <$fh> };
 
     # Clean up line delimeters
     s{ [\n\r] }{\n}gx foreach ( $source, @std_POD );
@@ -178,7 +180,7 @@ sub import {
     my $pod = join "\n\n", @chunks;
 
     # Extract essential interface components...
-    my ($prog_name) = ( splitpath($0) )[-1];
+    my ($prog_name) = ( splitpath($PROGRAM_NAME) )[-1];
 
     # Extract version info
     ($SCRIPT_VERSION)
@@ -240,7 +242,7 @@ NAME:
         };
         if ($minimal_keys) {
             my $minimal = _minimize_name($name);
-            croak "Internal error: minimalist mode caused arguments",
+            croak 'Internal error: minimalist mode caused arguments',
                 "'$name' and '$seen{$minimal}' to clash"
                 if $seen{$minimal};
             $seen{$minimal} = $name;
@@ -258,7 +260,7 @@ NAME:
         };
         if ($minimal_keys) {
             my $minimal = _minimize_name($name);
-            croak "Internal error: minimalist mode caused arguments",
+            croak 'Internal error: minimalist mode caused arguments',
                 "'$name' and '$seen{$minimal}' to clash"
                 if $seen{$minimal};
             $seen{$minimal} = $name;
@@ -269,7 +271,7 @@ NAME:
 
     # Extract Euclid information...
 ARG:
-    for my $arg ( values(%requireds), values(%options) ) {
+    for my $arg ( values %requireds, values %options ) {
         $arg->{src} =~ s{^ =for \s+ Euclid\b [^\n]* \s* (.*) \z}{}ixms
             or next ARG;
         my $info = $1;
@@ -284,11 +286,11 @@ ARG:
             push @false_vals, $regex;
         }
         if (@false_vals) {
-            $arg->{false_vals} = '(?:' . join( '|', @false_vals ) . ')';
+            $arg->{false_vals} = '(?:' . join( q{|}, @false_vals ) . ')';
         }
 
         while ( $info
-            =~ m{\G \s* (([^.]+)\.([^:=\s]+) \s*[:=]\s* ([^\n]*)) }gcxms )
+            =~ m{\G \s* (([^.]+)[.]([^:=\s]+) \s*[:=]\s* ([^\n]*)) }gcxms )
         {
             my ( $spec, $var, $field, $val ) = ( $1, $2, $3, $4 );
 
@@ -305,7 +307,8 @@ ARG:
             }
             elsif ( $field eq 'type' ) {
                 my ( $matchtype, $comma, $constraint )
-                    = $val =~ m{(/(?:\.|.)+/ | [^,\s]+)\s*(?:(,))?\s*(.*)}xms;
+                    = $val
+                    =~ m{(/(?:[.]|.)+/ | [^,\s]+)\s*(?:(,))?\s*(.*)}xms;
                 $arg->{var}{$var}{type} = $matchtype;
 
                 if ( $comma && length $constraint ) {
@@ -313,13 +316,15 @@ ARG:
                         =~ s/\s*\b\Q$var\E\b\s*//g;
                     $constraint =~ s/\b\Q$var\E\b/\$_[0]/g;
                     $arg->{var}{$var}{constraint} = eval "sub{ $constraint }"
-                        or _fail("Invalid .type constraint: $spec\n($@)");
+                        or _fail(
+                        "Invalid .type constraint: $spec\n($EVAL_ERROR)");
                 }
                 elsif ( length $constraint ) {
                     $arg->{var}{$var}{constraint_desc} = $constraint;
                     $arg->{var}{$var}{constraint}
                         = eval "sub{ \$_[0] $constraint }"
-                        or _fail("Invalid .type constraint: $spec\n($@)");
+                        or _fail(
+                        "Invalid .type constraint: $spec\n($EVAL_ERROR)");
                 }
                 else {
                     $arg->{var}{$var}{constraint_desc} = $matchtype;
@@ -332,7 +337,7 @@ ARG:
             }
             elsif ( $field eq 'default' ) {
                 eval "\$val = $val; 1"
-                    or _fail("Invalid .default value: $spec\n($@)");
+                    or _fail("Invalid .default value: $spec\n($EVAL_ERROR)");
                 $arg->{var}{$var}{default} = $val;
                 $arg->{has_defaults} = 1;
             }
@@ -346,7 +351,7 @@ ARG:
     }
 
     # Build one-line representation of interface...
-    my $arg_summary = join ' ',
+    my $arg_summary = join q{ },
         sort { $requireds{$a}{seq} <=> $requireds{$b}{seq} }
         keys %requireds;
     1 while $arg_summary =~ s/\[ [^][]* \]//gxms;
@@ -394,8 +399,8 @@ ARG:
 
     # Build matcher...
 
-    my @arg_list = ( values(%requireds), values(%options) );
-    my $matcher = join '|', map { $_->{matcher} }
+    my @arg_list = ( values %requireds, values %options );
+    my $matcher = join q{|}, map { $_->{matcher} }
         sort( { $b->{name} cmp $a->{name} } grep { $_->{name} =~ /^[^<]/ }
             @arg_list ),
         sort( { $a->{seq} <=> $b->{seq} } grep { $_->{name} =~ /^[<]/ }
@@ -418,8 +423,8 @@ ARG:
     # Run matcher...
     my $all_args_ref = { %options, %requireds };
 
-    my $argv = join( q{ },
-        map { my $arg = $_; $arg =~ tr/ \t/\0\1/; $arg } @ARGV );
+    my $argv = join q{ },
+        map { my $arg = $_; $arg =~ tr/ \t/\0\1/; $arg } @ARGV;
     if ( my $error = _doesnt_match( $matcher, $argv, $all_args_ref ) ) {
         _bad_arglist($error);
     }
@@ -507,7 +512,7 @@ ARG:
             my $val;
             $val = []
                 if $arg_info->{is_repeatable}
-                    or $arg_name =~ />\.\.\./;
+                    or $arg_name =~ />[.]{3}/;
             $val = {} if keys %{ $arg_info->{var} } > 1;
             _export_var( $vars_prefix, $opt_name, $val );
         }
@@ -526,7 +531,7 @@ sub AUTOLOAD {
     our $AUTOLOAD;
     $AUTOLOAD =~ s{.*::}{main::}xms;
     no strict 'refs';
-    goto &$AUTOLOAD;
+    goto &{$AUTOLOAD};
 }
 
 sub _minimize_name {
@@ -682,8 +687,8 @@ ARG:
                                 )
                                 if $arg_vars->{$var}{constraint}
                                     && !$arg_vars->{$var}{constraint}->($val);
-                            $entry->{$var} = ''
-                                unless defined( $ARGV{$arg_name} );
+                            $entry->{$var} = q{}
+                                unless defined $ARGV{$arg_name};
                         }
                         next VAR;
                     }
@@ -734,7 +739,7 @@ sub _convert_to_regex {
 
         $regex =~ s/ (\s+) /$1.'[\\s\\0\\1]*'/egxms;
         my $generic = $regex;
-        $regex =~ s{ < (.*?) >(\.\.\.|) }
+        $regex =~ s{ < (.*?) >([.]{3}|) }
                    { my ($var_name, $var_rep) = ($1, $2);
                      $var_name =~ s/(\s+)\[\\s\\0\\1]\*/$1/gxms;
                      my $type = $arg->{var}{$var_name}{type} || q{};
@@ -822,7 +827,7 @@ sub _get_variants {
         }
         if ( $arg_desc_with =~ m/ [[(] ([^][()]*) [])] /xms ) {
             my $option = $1;
-            for my $alternative ( split /\|/, $option ) {
+            for my $alternative ( split /[|]/, $option ) {
                 my $arg_desc = $arg_desc_with;
                 $arg_desc =~ s{[[(] [^][()]* [])]}{$alternative}xms;
                 push @arg_desc, $arg_desc;
@@ -992,7 +997,8 @@ remove the command-line arguments from C<@ARGV> and parse them, and
 =item 5.
 
 put the results in the global C<%ARGV> variable (or into specifically named
-optional variables, if you request that -- see L<Exporting Option Variables>).
+optional variables, if you request that -- see
+L</"Exporting Option Variables">).
 
 =back
 
@@ -1005,7 +1011,7 @@ that it adds the POD from the caller module to the POD of the callee.
 
 All of which just means you can put some or all of your CLI specification
 in a module, rather than in the application's source file.
-See L<Module Interface> for more details.
+See L</"Module Interface"> for more details.
 
 =head1 INTERFACE
 
@@ -1054,7 +1060,7 @@ the following POD documentation:
 
 Getopt::Euclid ignores the name specified here. In fact, if you use the
 standard C<--help>, C<--usage>, C<--man>, or C<--version> arguments (see
-L<Standard arguments>), the module replaces the name specified in this
+L</"Standard arguments">), the module replaces the name specified in this
 POD section with the actual name by which the program was invoked (i.e.
 with C<$0>).
 
@@ -1096,7 +1102,7 @@ Euclid stores the version as C<$Getopt::Euclid::SCRIPT_VERSION>.
 Getopt::Euclid uses the specifications in this POD section to build a
 parser for command-line arguments. That parser requires that every one
 of the specified arguments is present in any command-line invocation.
-See L<Specifying arguments> for details of the specification syntax.
+See L</"Specifying arguments"> for details of the specification syntax.
 
 The actual headings that Getopt::Euclid can recognize here are:
 
@@ -1107,7 +1113,7 @@ The actual headings that Getopt::Euclid can recognize here are:
 Getopt::Euclid uses the specifications in this POD section to build a
 parser for command-line arguments. That parser does not require that any
 of the specified arguments is actually present in a command-line invocation.
-Again, see L<Specifying arguments> for details of the specification syntax.
+Again, see L</"Specifying arguments"> for details of the specification syntax.
 
 Typically a program will specify both C<REQUIRED ARGUMENTS> and C<OPTIONS>,
 but there is no requirement that it supply both, or either.
@@ -1224,7 +1230,7 @@ more than once, using the C<repeatable> option:
 
 When an argument is marked repeatable the corresponding entry of C<%ARGV> will
 not contain a single value, but rather an array reference. If the argument also
-has L<Multiple placeholders>, then the corresponding entry in C<%ARGV> will be
+has L</"Multiple placeholders">, then the corresponding entry in C<%ARGV> will be
 an array reference with each array entry being a hash reference.
 
 =head2 Boolean arguments
@@ -1318,7 +1324,7 @@ or:
 
 on the command-line. If the second placeholder value is not provided, the
 corresponding C<$ARGV{'-size'}{'w'}> entry is set to C<undef>. See also
-L<Placeholder defaults>.
+L</"Placeholder defaults">.
 
 =head2 Unflagged placeholders
 
@@ -1360,7 +1366,7 @@ Any placeholder that is immediately followed by C<...>, like so:
 
 will match as many times as possible, but at least once. Note that
 this implies that an unconstrained repeated unflagged placeholder
-(see L<Placeholder constraints> and L<Unflagged placeholders>) will
+(see L</"Placeholder constraints"> and L</"Unflagged placeholders">) will
 consume the rest of the command-line, and so should be specified last
 in the POD.
 
@@ -1737,7 +1743,7 @@ or else the module simply doesn't know about the type you specified:
     =for Euclid
         count.type: complex
 
-See L<Standard placeholder types> for a list of types that Getopt::Euclid
+See L</"Standard placeholder types"> for a list of types that Getopt::Euclid
 I<does> recognize.
 
 =item Invalid .type constraint: %s
@@ -1792,7 +1798,7 @@ Getopt::Euclid doesn't work that way. Load it only once.
 =item Unknown mode ('%s')
 
 The only argument that a C<use Getopt::Euclid> command accepts is
-C<':minimal_keys'> (see L<Minimalist keys>). You specified something
+C<':minimal_keys'> (see L</"Minimalist keys">). You specified something
 else instead (or possibly forgot to put a semicolon after C<use
 Getopt::Euclid>).
 
