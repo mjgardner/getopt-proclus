@@ -30,11 +30,13 @@ my %WriteMakefileArgs = (
     'Carp' => '0',
     'English' => '0',
     'File::Spec::Functions' => '0',
+    'IO::Interactive' => '0',
     'IO::Page' => '0',
     'IO::Pager::Page' => '0',
     'List::Util' => '0',
     'Modern::Perl' => '0',
     'Pod::Text' => '0',
+    'autodie' => '0',
     're' => '0',
     'utf8' => '0'
   },

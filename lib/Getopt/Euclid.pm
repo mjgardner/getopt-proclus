@@ -17,10 +17,12 @@ BEGIN {
 
 # ABSTRACT: Executable Uniform Command-Line Interface Descriptions
 
+use autodie;
 use Carp;
 use English '-no_match_vars';
 use File::Spec::Functions qw(splitpath);
 use List::Util qw( first );
+use IO::Interactive 'is_interactive';
 ## no critic (RequireDotMatchAnything,RequireExtendedFormatting)
 ## no critic (RequireLineBoundaryMatching)
 
@@ -384,7 +386,7 @@ ARG:
 
     # Handle standard args...
     given ( \@ARGV ) {
-        no warnings 'closure';
+        no warnings 'closure';    ## no critic (ProhibitNoWarnings)
         when ( first { $_ and m/ --man /xms } @{$_} ) {
             _print_and_exit( $pod, 'paged' )
         }
@@ -644,6 +646,7 @@ sub _rectify_args {
             }
         }
     }
+    return;
 }
 
 sub _verify_args {
@@ -748,6 +751,7 @@ ARG:
             }
         }
     }
+    return;
 }
 
 sub _convert_to_regex {
@@ -817,7 +821,7 @@ sub _convert_to_regex {
 sub _print_and_exit {
     my ( $pod, $paged ) = @_;
 
-    if ( -t *STDOUT and eval { require Pod::Text } ) {
+    if ( is_interactive() and eval { require Pod::Text } ) {
         if ($paged) {
             eval        { require IO::Page }
                 or eval { require IO::Pager::Page };
