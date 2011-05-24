@@ -80,7 +80,7 @@ sub _make_equivalent {
     my ( $hash_ref, %alias_hash ) = @_;
 
     while ( my ( $name, $aliases ) = each %alias_hash ) {
-        foreach my $alias (@$aliases) {
+        foreach my $alias ( @{$aliases} ) {
             $hash_ref->{$alias} = $hash_ref->{$name};
         }
     }
@@ -102,7 +102,7 @@ my @std_POD;
 # END { $has_run = 1 }
 
 sub Getopt::Euclid::Importer::DESTROY {
-    return if $has_run || $^C;    # No errors when only compiling
+    return if $has_run || $COMPILING;    # No errors when only compiling
     croak
         '.pm file cannot define an explicit import() when using Getopt::Euclid';
 }
@@ -120,7 +120,7 @@ sub import {
     croak "Unknown mode ('$_')" for @_;
 
     if ($has_run) {
-        carp "Getopt::Euclid loaded a second time";
+        carp 'Getopt::Euclid loaded a second time';
         warn "Second attempt to parse command-line was ignored\n";
         return;
     }
@@ -132,8 +132,8 @@ sub import {
         # Save module's POD...
         open my $fh, '<', $caller[1]
             or croak
-            "Getopt::Euclid was unable to access POD\n($!)\nProblem was";
-        push @std_POD, do { local $/; <$fh> };
+            "Getopt::Euclid was unable to access POD\n($OS_ERROR)\nProblem was";
+        push @std_POD, do { local $INPUT_RECORD_SEPARATOR; <$fh> };
 
         # Install this import() sub as module's import sub...
         no strict 'refs';
@@ -152,9 +152,10 @@ sub import {
     $has_run = 1;
 
     # Acquire POD source...
-    open my $fh, '<', $0
-        or croak "Getopt::Euclid was unable to access POD\n($!)\nProblem was";
-    my $source = do { local $/; <$fh> };
+    open my $fh, '<', $PROGRAM_NAME
+        or croak
+        "Getopt::Euclid was unable to access POD\n($OS_ERROR)\nProblem was";
+    my $source = do { local $INPUT_RECORD_SEPARATOR; <$fh> };
 
     # Clean up line delimeters
     s{ [\n\r] }{\n}gx foreach ( $source, @std_POD );
@@ -194,7 +195,7 @@ sub import {
     my $pod = join "\n\n", @chunks;
 
     # Extract essential interface components...
-    my ($prog_name) = ( splitpath($0) )[-1];
+    my ($prog_name) = ( splitpath($PROGRAM_NAME) )[-1];
 
     # Extract version info
     ($SCRIPT_VERSION)
@@ -300,7 +301,7 @@ ARG:
             push @false_vals, $regex;
         }
         if (@false_vals) {
-            $arg->{false_vals} = '(?:' . join( '|', @false_vals ) . ')';
+            $arg->{false_vals} = '(?:' . join( q{|}, @false_vals ) . ')';
         }
 
         while ( $info
@@ -330,13 +331,15 @@ ARG:
                         =~ s/\s*\b\Q$var\E\b\s*//g;
                     $constraint =~ s/\b\Q$var\E\b/\$_[0]/g;
                     $arg->{var}{$var}{constraint} = eval "sub{ $constraint }"
-                        or _fail("Invalid .type constraint: $spec\n($@)");
+                        or _fail(
+                        "Invalid .type constraint: $spec\n($EVAL_ERROR)");
                 }
                 elsif ( length $constraint ) {
                     $arg->{var}{$var}{constraint_desc} = $constraint;
                     $arg->{var}{$var}{constraint}
                         = eval "sub{ \$_[0] $constraint }"
-                        or _fail("Invalid .type constraint: $spec\n($@)");
+                        or _fail(
+                        "Invalid .type constraint: $spec\n($EVAL_ERROR)");
                 }
                 else {
                     $arg->{var}{$var}{constraint_desc} = $matchtype;
@@ -349,7 +352,7 @@ ARG:
             }
             elsif ( $field eq 'default' ) {
                 eval "\$val = $val; 1"
-                    or _fail("Invalid .default value: $spec\n($@)");
+                    or _fail("Invalid .default value: $spec\n($EVAL_ERROR)");
                 $arg->{var}{$var}{default} = $val;
                 $arg->{has_defaults} = 1;
             }
@@ -411,7 +414,7 @@ ARG:
 
     # Build matcher...
 
-    my @arg_list = ( values(%requireds), values(%options) );
+    my @arg_list = ( values %requireds, values %options );
     my $matcher = join q{|}, map { $_->{matcher} }
         sort( { $b->{name} cmp $a->{name} } grep { $_->{name} =~ /^[^<]/ }
             @arg_list ),
@@ -435,8 +438,8 @@ ARG:
     # Run matcher...
     my $all_args_ref = { %options, %requireds };
 
-    my $argv = join( q{ },
-        map { my $arg = $_; $arg =~ tr/ \t/\0\1/; $arg } @ARGV );
+    my $argv = join q{ },
+        map { my $arg = $_; $arg =~ tr/ \t/\0\1/; $arg } @ARGV;
     if ( my $error = _doesnt_match( $matcher, $argv, $all_args_ref ) ) {
         _bad_arglist($error);
     }
@@ -524,7 +527,7 @@ ARG:
             my $val;
             $val = []
                 if $arg_info->{is_repeatable}
-                    or $arg_name =~ />\.\.\./;
+                    or $arg_name =~ />[.]{3}/;
             $val = {} if keys %{ $arg_info->{var} } > 1;
             _export_var( $vars_prefix, $opt_name, $val );
         }
@@ -839,7 +842,7 @@ sub _get_variants {
         }
         if ( $arg_desc_with =~ m/ [[(] ([^][()]*) [])] /xms ) {
             my $option = $1;
-            for my $alternative ( split /\|/, $option ) {
+            for my $alternative ( split /[|]/, $option ) {
                 my $arg_desc = $arg_desc_with;
                 $arg_desc =~ s{[[(] [^][()]* [])]}{$alternative}xms;
                 push @arg_desc, $arg_desc;
