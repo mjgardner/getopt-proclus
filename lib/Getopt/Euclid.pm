@@ -453,22 +453,21 @@ ARG:
     # Check all requireds have been found...
     my @missing = map {"\t$_\n"} grep { !exists $ARGV{$_} } keys %requireds;
 
-    _bad_arglist(
-        'Missing required argument',
-        ( @missing == 1 ? q{} : q{s} ),
-        ":\n", @missing
-    ) if @missing;
+    if (@missing) {
+        _bad_arglist(
+            'Missing required argument',
+            ( @missing == 1 ? q{} : q{s} ),
+            ":\n", @missing,
+        );
+    }
 
     # Back-translate \0-quoted spaces and \1-quoted tabs...
-
     _rectify_args();
 
     # Check constraints and fill in defaults...
-
     _verify_args($all_args_ref);
 
     # Clean up @ARGV and %ARGV...
-
     @ARGV = ();    # Everything must have been parsed, so nothign left
 
     for my $arg_name ( keys %ARGV ) {
@@ -507,7 +506,9 @@ ARG:
                 else {
                     $ARGV{$arg_flag} = $variant_val;
                 }
-                $vars_opt_vals{$arg_flag} = $ARGV{$arg_flag} if $vars_prefix;
+                if ($vars_prefix) {
+                    $vars_opt_vals{$arg_flag} = $ARGV{$arg_flag};
+                }
             }
 
             if ($vars_prefix) {
@@ -527,10 +528,12 @@ ARG:
             my $arg_name = $long_names{$opt_name};
             my $arg_info = $all_args_ref->{$arg_name};
             my $val;
-            $val = []
-                if $arg_info->{is_repeatable}
-                    or $arg_name =~ />[.]{3}/;
-            $val = {} if keys %{ $arg_info->{var} } > 1;
+            if ( $arg_info->{is_repeatable} or $arg_name =~ />[.]{3}/ ) {
+                $val = [];
+            }
+            if ( keys %{ $arg_info->{var} } > 1 ) {
+                $val = {};
+            }
             _export_var( $vars_prefix, $opt_name, $val );
         }
     }
@@ -588,7 +591,8 @@ sub _doesnt_match {
         if ( $error =~ m/\A ((\W) (\w) (\w+))/xms ) {
             my ( $bundle, $marker, $firstchar, $chars ) = ( $1, $2, $3, $4 );
             $argv =~ s{\Q$bundle\E}{$marker$firstchar $marker$chars}xms;
-            return if !_doesnt_match( $matcher, $argv, $arg_specs_ref );
+            return
+                if !_doesnt_match( $matcher, $argv, $arg_specs_ref );
         }
     ARG:
         for my $arg_spec_ref ( values %{$arg_specs_ref} ) {
@@ -670,7 +674,9 @@ ARG:
                 if ( exists $ARGV{$arg_name} ) {
 
                     # Named vars...
-                    if ( ref $entry eq 'HASH' && defined $entry->{$var} ) {
+                    if ( ref $entry eq 'HASH'
+                        && defined $entry->{$var} )
+                    {
                         for my $val (
                             ref $entry->{$var} eq 'ARRAY'
                             ? @{ $entry->{$var} }
@@ -809,7 +815,8 @@ sub _print_and_exit {
 
     if ( -t *STDOUT and eval { require Pod::Text } ) {
         if ($paged) {
-            eval { require IO::Page } or eval { require IO::Pager::Page };
+            eval        { require IO::Page }
+                or eval { require IO::Pager::Page };
         }
         open my $pod_handle, '<', \$pod;
         my $parser = Pod::Text->new( sentence => 0, width => 78 );
