@@ -9,8 +9,11 @@ allowed_pragmata = perlversion strict warnings utf8
 perltidyrc = xt/author/perltidy.rc
 
 [Documentation::PodSpelling]
-stop_words = bugtracker Perldoc perldoc annonations PASSed
+stop_words = bugtracker Perldoc perldoc annonations PASSed callee CLI perl automagically prepended substring multi LICENCE whitespace whitespacing boolean et cetera Unflagged unflagged syntaxes namespace satisify placeholder's behaviours
 
 [Documentation::RequirePodSections]
-lib_sections = NAME | VERSION | SYNOPSIS | DESCRIPTION | SUPPORT | AUTHOR | COPYRIGHT AND LICENSE
-script_sections = NAME | USAGE | DESCRIPTION | CONFIGURATION | SUPPORT | AUTHOR | COPYRIGHT AND LICENSE
+lib_sections = NAME | VERSION | SYNOPSIS | DESCRIPTION | SUPPORT | AUTHORS | COPYRIGHT AND LICENSE
+script_sections = NAME | USAGE | DESCRIPTION | CONFIGURATION | SUPPORT | AUTHORS | COPYRIGHT AND LICENSE
+
+[Subroutines::ProhibitCallsToUndeclaredSubs]
+exempt_subs = Carp::croak
