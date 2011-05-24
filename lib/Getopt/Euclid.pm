@@ -102,7 +102,7 @@ sub import {
     @_
         = grep { !( /:vars(?:<(\w+)>)?/ and $vars_prefix = ( $1 or 'ARGV_' ) ) }
         @_;
-    croak "Unknown mode ('$_')" for @_;
+    croak "Unknown mode ('$_[0]')" if @_;
 
     if ($has_run) {
         carp 'Getopt::Euclid loaded a second time';
@@ -143,7 +143,7 @@ sub import {
     my $source = do { local $INPUT_RECORD_SEPARATOR; <$fh> };
 
     # Clean up line delimeters
-    s{ [\n\r] }{\n}gx foreach ( $source, @std_POD );
+    for ( $source, @std_POD ) {s{ [\n\r] }{\n}gx}
 
     # Clean up significant entities...
     $source =~ s{ E<lt> }{<}gxms;
@@ -281,7 +281,7 @@ ARG:
         my @false_vals;
         while ( $info =~ s{^ \s* false \s*[:=] \s* ([^\n]*)}{}xms ) {
             my $regex = $1;
-            1 while $regex =~ s/ \[ ([^]]*) \] /(?:$1)?/gxms;
+            while ( $regex =~ s/ \[ ([^]]*) \] /(?:$1)?/gxms ) {1}
             $regex =~ s/ (\s+) /$1.'[\\s\\0\\1]*'/egxms;
             push @false_vals, $regex;
         }
@@ -354,8 +354,8 @@ ARG:
     my $arg_summary = join q{ },
         sort { $requireds{$a}{seq} <=> $requireds{$b}{seq} }
         keys %requireds;
-    1 while $arg_summary =~ s/\[ [^][]* \]//gxms;
-    $arg_summary .= lc " [$opt_name]" if $opt_name;
+    while ( $arg_summary =~ s/\[ [^][]* \]//gxms ) {1}
+    if ($opt_name) { $arg_summary .= lc " [$opt_name]" }
     $arg_summary =~ s/\s+/ /gxms;
 
     $pod =~ s{ ^(=head1 $NAME \s*) .*? (- .*)? $EOHEAD }
@@ -368,28 +368,31 @@ ARG:
             {$1 This document refers to $prog_name version $SCRIPT_VERSION $2}xms;
 
     # Handle standard args...
-    if ( grep {/ --man /xms} @ARGV ) {
-        _print_and_exit( $pod, 'paged' );
-    }
-    elsif ( first { $_ eq '--usage' } @ARGV ) {
-        print "Usage: $prog_name $arg_summary\n",
-            "       $prog_name --help\n";
-        exit;
-    }
-    elsif ( first { $_ eq '--help' } @ARGV ) {
-        my $pod = "=head1 Usage:\n\n$prog_name $arg_summary\n\n";
-        $pod .= "=head1 \L\u$req_name:\E\E\n\n$required\n\n"
-            if ( $required || q{} ) =~ /\S/;
-        $pod .= "=head1 \L\u$opt_name:\E\E\n\n$options\n\n"
-            if ( $options || q{} ) =~ /\S/;
-        _print_and_exit($pod);
-    }
-    elsif ( first { $_ eq '--version' } @ARGV ) {
-        print "This is $prog_name version $SCRIPT_VERSION\n";
-        if ($licence) {
-            print "\n$licence\n";
+    given ( \@ARGV ) {
+        no warnings 'closure';
+        when ( grep {/ --man /xms} @{$_} ) {
+            _print_and_exit( $pod, 'paged' )
         }
-        exit;
+        when ( first { $_ and $_ eq '--usage' } @{$_} ) {
+            say "Usage: $prog_name $arg_summary\n",
+                "       $prog_name --help";
+            exit;
+        }
+        when ( first { $_ and $_ eq '--help' } @{$_} ) {
+            my $pod = "=head1 Usage:\n\n$prog_name $arg_summary\n\n";
+            if ( ( $required || q{} ) =~ /\S/ ) {
+                $pod .= "=head1 \L\u$req_name:\E\E\n\n$required\n\n";
+            }
+            if ( ( $options || q{} ) =~ /\S/ ) {
+                $pod .= "=head1 \L\u$opt_name:\E\E\n\n$options\n\n";
+            }
+            _print_and_exit($pod);
+        }
+        when ( first { $_ and $_ eq '--version' } @{$_} ) {
+            say "This is $prog_name version $SCRIPT_VERSION";
+            if ($licence) { say "\n$licence" }
+            exit;
+        }
     }
 
     # Convert arg specifications to regexes...
@@ -433,28 +436,23 @@ ARG:
     }
 
     # Check all requireds have been found...
+    my @missing = map {"\t$_\n"} grep { !exists $ARGV{$_} } keys %requireds;
 
-    my @missing;
-    for my $req ( keys %requireds ) {
-        push @missing, "\t$req\n"
-            if !exists $ARGV{$req};
+    if (@missing) {
+        _bad_arglist(
+            'Missing required argument',
+            ( @missing == 1 ? q{} : q{s} ),
+            ":\n", @missing,
+        );
     }
-    _bad_arglist(
-        'Missing required argument',
-        ( @missing == 1 ? q{} : q{s} ),
-        ":\n", @missing
-    ) if @missing;
 
     # Back-translate \0-quoted spaces and \1-quoted tabs...
-
     _rectify_args();
 
     # Check constraints and fill in defaults...
-
     _verify_args($all_args_ref);
 
     # Clean up @ARGV and %ARGV...
-
     @ARGV = ();    # Everything must have been parsed, so nothign left
 
     for my $arg_name ( keys %ARGV ) {
@@ -493,7 +491,9 @@ ARG:
                 else {
                     $ARGV{$arg_flag} = $variant_val;
                 }
-                $vars_opt_vals{$arg_flag} = $ARGV{$arg_flag} if $vars_prefix;
+                if ($vars_prefix) {
+                    $vars_opt_vals{$arg_flag} = $ARGV{$arg_flag};
+                }
             }
 
             if ($vars_prefix) {
@@ -513,10 +513,12 @@ ARG:
             my $arg_name = $long_names{$opt_name};
             my $arg_info = $all_args_ref->{$arg_name};
             my $val;
-            $val = []
-                if $arg_info->{is_repeatable}
-                    or $arg_name =~ />[.]{3}/;
-            $val = {} if keys %{ $arg_info->{var} } > 1;
+            if ( $arg_info->{is_repeatable} or $arg_name =~ />[.]{3}/ ) {
+                $val = [];
+            }
+            if ( keys %{ $arg_info->{var} } > 1 ) {
+                $val = {};
+            }
             _export_var( $vars_prefix, $opt_name, $val );
         }
     }
@@ -574,7 +576,8 @@ sub _doesnt_match {
         if ( $error =~ m/\A ((\W) (\w) (\w+))/xms ) {
             my ( $bundle, $marker, $firstchar, $chars ) = ( $1, $2, $3, $4 );
             $argv =~ s{\Q$bundle\E}{$marker$firstchar $marker$chars}xms;
-            return if !_doesnt_match( $matcher, $argv, $arg_specs_ref );
+            return
+                if !_doesnt_match( $matcher, $argv, $arg_specs_ref );
         }
     ARG:
         for my $arg_spec_ref ( values %{$arg_specs_ref} ) {
@@ -656,7 +659,9 @@ ARG:
                 if ( exists $ARGV{$arg_name} ) {
 
                     # Named vars...
-                    if ( ref $entry eq 'HASH' && defined $entry->{$var} ) {
+                    if ( ref $entry eq 'HASH'
+                        && defined $entry->{$var} )
+                    {
                         for my $val (
                             ref $entry->{$var} eq 'ARRAY'
                             ? @{ $entry->{$var} }
@@ -795,7 +800,8 @@ sub _print_and_exit {
 
     if ( -t *STDOUT and eval { require Pod::Text } ) {
         if ($paged) {
-            eval { require IO::Page } or eval { require IO::Pager::Page };
+            eval        { require IO::Page }
+                or eval { require IO::Pager::Page };
         }
         open my $pod_handle, '<', \$pod;
         my $parser = Pod::Text->new( sentence => 0, width => 78 );
