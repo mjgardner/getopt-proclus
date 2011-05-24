@@ -21,6 +21,9 @@ use Carp;
 use English '-no_match_vars';
 use File::Spec::Functions qw(splitpath);
 use List::Util qw( first );
+use Regexp::DefaultFlags;
+## no critic (RequireDotMatchAnything,RequireExtendedFormatting)
+## no critic (RequireLineBoundaryMatching)
 
 # Convert arg specification syntax to Perl regex syntax
 
@@ -73,7 +76,7 @@ _make_equivalent(
 );
 
 my $OPTIONAL;
-$OPTIONAL = qr{ \[ [^[]* (?: (??{$OPTIONAL}) [^[]* )* \] }xms;
+$OPTIONAL = qr{ \[ [^[]* (?: (??{$OPTIONAL}) [^[]* )* \] };
 
 # Utility sub to factor out hash key aliasing...
 sub _make_equivalent {
@@ -98,9 +101,6 @@ sub _fail {
 my $has_run;
 my @std_POD;
 
-# Looks unneeded -Kevin
-# END { $has_run = 1 }
-
 sub Getopt::Euclid::Importer::DESTROY {
     return if $has_run || $COMPILING;    # No errors when only compiling
     croak
@@ -114,8 +114,8 @@ sub import {
     shift @_;
     my $minimal_keys;
     my $vars_prefix;
-    @_ = grep { !( /:minimal_keys/ and $minimal_keys = 1 ) } @_;
-    @_ = grep { !( /:vars(?:<(\w+)>)?/ and $vars_prefix = $1 || "ARGV_" ) }
+    @_ = grep { !( / :minimal_keys / and $minimal_keys = 1 ) } @_;
+    @_ = grep { !( / :vars (?:<(\w+)>)? / and $vars_prefix = $1 || 'ARGV_' ) }
         @_;
     croak "Unknown mode ('$_')" for @_;
 
@@ -127,7 +127,7 @@ sub import {
 
     # Handle calls from .pm files...
     my @caller = caller;
-    if ( $caller[1] =~ m/[.]pm \z/xms ) {
+    if ( $caller[1] =~ m/[.]pm \z/ ) {
 
         # Save module's POD...
         open my $fh, '<', $caller[1]
@@ -165,20 +165,20 @@ sub import {
     $source =~ s{ E<gt> }{>}gxms;
 
     # Set up parsing rules...
-    my $HWS     = qr{ [^\S\n]*      }xms;
-    my $EOHEAD  = qr{ (?= ^=head1 | \z)  }xms;
-    my $POD_CMD = qr{            = [^\W\d]\w+ [^\n]* (?= \n\n )}xms;
-    my $POD_CUT = qr{ (?! \n\n ) = cut $HWS          (?= \n\n )}xms;
+    my $HWS     = qr{ [^\S\n]*      };
+    my $EOHEAD  = qr{ (?= ^=head1 | \z)  };
+    my $POD_CMD = qr{            = [^\W\d]\w+ [^\n]* (?= \n\n )};
+    my $POD_CUT = qr{ (?! \n\n ) = cut $HWS          (?= \n\n )};
 
-    my $NAME  = qr{ $HWS NAME    $HWS \n }xms;
-    my $VERS  = qr{ $HWS VERSION $HWS \n }xms;
-    my $USAGE = qr{ $HWS USAGE   $HWS \n }xms;
+    my $NAME  = qr{ $HWS NAME    $HWS \n };
+    my $VERS  = qr{ $HWS VERSION $HWS \n };
+    my $USAGE = qr{ $HWS USAGE   $HWS \n };
 
-    my $STD = qr{ STANDARD | STD  }xms;
-    my $ARG = qr{ $HWS ARG(?:UMENT)?S? }xms;
+    my $STD = qr{ STANDARD | STD  };
+    my $ARG = qr{ $HWS ARG(?:UMENT)?S? };
 
-    my $OPTIONS  = qr{ $HWS $STD? $HWS OPTION(?:AL|S)? $ARG? $HWS \n }xms;
-    my $REQUIRED = qr{ $HWS $STD? $HWS REQUIRED        $ARG? $HWS \n }xms;
+    my $OPTIONS  = qr{ $HWS $STD? $HWS OPTION(?:AL|S)? $ARG? $HWS \n };
+    my $REQUIRED = qr{ $HWS $STD? $HWS REQUIRED        $ARG? $HWS \n };
 
     my $EUCLID_ARG = qr{ ^=item \s* ([^\n]*?) \s* \n\s*\n
                         (
@@ -188,7 +188,7 @@ sub import {
                             | (?= ^=[^\W\d]\w* | \z)
                         )
                         )
-                    }xms;
+                    };
 
     # Extract POD alone...
     my @chunks = $source =~ m{ $POD_CMD .*? (?: $POD_CUT | \z ) }gxms;
@@ -199,34 +199,34 @@ sub import {
 
     # Extract version info
     ($SCRIPT_VERSION)
-        = $pod =~ m/^=head1 $VERS .*? (\d+(?:[._]\d+)+) .*? $EOHEAD /xms;
+        = $pod =~ m/^=head1 $VERS .*? (\d+(?:[._]\d+)+) .*? $EOHEAD /;
     if ( !defined $SCRIPT_VERSION ) {
         $SCRIPT_VERSION = $main::VERSION;
     }
 
     my ( $opt_name, $options )
-        = $pod =~ m/^=head1 ($OPTIONS)  (.*?) $EOHEAD /xms;
+        = $pod =~ m/^=head1 ($OPTIONS)  (.*?) $EOHEAD /;
 
     my ( $req_name, $required )
-        = $pod =~ m/^=head1 ($REQUIRED) (.*?) $EOHEAD /xms;
+        = $pod =~ m/^=head1 ($REQUIRED) (.*?) $EOHEAD /;
 
     my ($licence)
         = $pod
-        =~ m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms;
+        =~ m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /;
 
     # Extra info from higher-level pod...
     for my $std_POD ( reverse @std_POD ) {
         my ( undef, $more_options )
-            = $std_POD =~ m/^=head1 ($OPTIONS)  (.*?) $EOHEAD /xms;
+            = $std_POD =~ m/^=head1 ($OPTIONS)  (.*?) $EOHEAD /;
         $options = ( $more_options || q{} ) . ( $options || q{} );
 
         my ( undef, $more_required )
-            = $std_POD =~ m/^=head1 ($REQUIRED) (.*?) $EOHEAD /xms;
+            = $std_POD =~ m/^=head1 ($REQUIRED) (.*?) $EOHEAD /;
         $required = ( $more_required || q{} ) . ( $required || q{} );
 
         my ($more_licence)
             = $std_POD
-            =~ m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms;
+            =~ m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /;
         $licence = ( $more_licence || q{} ) . ( $licence || q{} );
     }
 
@@ -291,10 +291,10 @@ ARG:
             or next ARG;
         my $info = $1;
 
-        $arg->{is_repeatable} = $info =~ s{^ \s* repeatable \s*? $}{}xms;
+        $arg->{is_repeatable} = $info =~ s{^ \s* repeatable \s*? $}{};
 
         my @false_vals;
-        while ( $info =~ s{^ \s* false \s*[:=] \s* ([^\n]*)}{}xms ) {
+        while ( $info =~ s{^ \s* false \s*[:=] \s* ([^\n]*)}{} ) {
             my $regex = $1;
             1 while $regex =~ s/ \[ ([^]]*) \] /(?:$1)?/gxms;
             $regex =~ s/ (\s+) /$1.'[\\s\\0\\1]*'/egxms;
@@ -310,7 +310,7 @@ ARG:
             my ( $spec, $var, $field, $val ) = ( $1, $2, $3, $4 );
 
             # Check for misplaced fields...
-            if ( $arg->{name} !~ m{\Q<$var>}xms ) {
+            if ( $arg->{name} !~ m{\Q<$var>} ) {
                 _fail(
                     "Invalid constraint: $spec\n(No <$var> placeholder in argument: $arg->{name})"
                 );
@@ -322,8 +322,7 @@ ARG:
             }
             elsif ( $field eq 'type' ) {
                 my ( $matchtype, $comma, $constraint )
-                    = $val
-                    =~ m{(/(?:[.]|.)+/ | [^,\s]+)\s*(?:(,))?\s*(.*)}xms;
+                    = $val =~ m{(/(?:[.]|.)+/ | [^,\s]+)\s*(?:(,))?\s*(.*)};
                 $arg->{var}{$var}{type} = $matchtype;
 
                 if ( $comma && length $constraint ) {
@@ -344,7 +343,7 @@ ARG:
                 else {
                     $arg->{var}{$var}{constraint_desc} = $matchtype;
                     $arg->{var}{$var}{constraint}
-                        = $matchtype =~ m{\A\s*/.*/\s*\z}xms
+                        = $matchtype =~ m{\A\s*/.*/\s*\z}
                         ? sub {1}
                         : $STD_CONSTRAINT_FOR{$matchtype}
                         or _fail("Unknown .type constraint: $spec");
@@ -377,13 +376,13 @@ ARG:
             {join(' ', $1, $prog_name, $2 || ())}xems;
 
     $pod =~ s{ ^(=head1 $USAGE \s*) .*? (\s*) $EOHEAD }
-            {$1 $prog_name $arg_summary $2}xms;
+            {$1 $prog_name $arg_summary $2};
 
     $pod =~ s{ ^(=head1 $VERS    \s*) .*? (\s*) $EOHEAD }
-            {$1 This document refers to $prog_name version $SCRIPT_VERSION $2}xms;
+            {$1 This document refers to $prog_name version $SCRIPT_VERSION $2};
 
     # Handle standard args...
-    if ( grep {/ --man /xms} @ARGV ) {
+    if ( grep {/ --man /} @ARGV ) {
         _print_and_exit( $pod, 'paged' );
     }
     elsif ( first { $_ eq '--usage' } @ARGV ) {
@@ -430,7 +429,7 @@ ARG:
         my (@msg) = @_;
         my $msg = join q{}, @msg;
         $msg =~ tr/\0\1/ \t/;
-        $msg =~ s/\n?\z/\n/xms;
+        $msg =~ s/\n?\z/\n/;
         warn "$msg(Try: $prog_name --help)\n\n";
         exit 2;    # Traditional "bad arg list" value
     };
@@ -495,7 +494,7 @@ ARG:
 
             for my $arg_flag (@variants) {
                 my $variant_val = $val;
-                if ( $false_vals && $arg_flag =~ m{\A $false_vals \z}xms ) {
+                if ( $false_vals && $arg_flag =~ m{\A $false_vals \z} ) {
                     $variant_val = $variant_val ? 0 : 1;
                 }
 
@@ -536,6 +535,7 @@ ARG:
     if ($minimal_keys) {
         _minimize_entries_of( \%ARGV );
     }
+    return;
 }
 
 # ###### Utility subs #############
@@ -544,7 +544,7 @@ ARG:
 
 sub AUTOLOAD {
     our $AUTOLOAD;
-    $AUTOLOAD =~ s{.*::}{main::}xms;
+    $AUTOLOAD =~ s{.*::}{main::};
     no strict 'refs';
     goto &{$AUTOLOAD};
 }
@@ -579,12 +579,12 @@ sub _doesnt_match {
     local @errors = ();
     %ARGV = ();
 
-    $argv =~ m{\A (?: \s* $matcher )* \s* \z}xms;
+    $argv =~ m{\A (?: \s* $matcher )* \s* \z};
 
     for my $error (@errors) {
-        if ( $error =~ m/\A ((\W) (\w) (\w+))/xms ) {
+        if ( $error =~ m/\A ((\W) (\w) (\w+))/ ) {
             my ( $bundle, $marker, $firstchar, $chars ) = ( $1, $2, $3, $4 );
-            $argv =~ s{\Q$bundle\E}{$marker$firstchar $marker$chars}xms;
+            $argv =~ s{\Q$bundle\E}{$marker$firstchar $marker$chars};
             return if !_doesnt_match( $matcher, $argv, $arg_specs_ref );
         }
     ARG:
@@ -593,7 +593,7 @@ sub _doesnt_match {
             local $bad_type;
             next ARG
                 if $error
-                    !~ m/\A [\s\0\1]* ($arg_spec_ref->{generic_matcher})/xms
+                    !~ m/\A [\s\0\1]* ($arg_spec_ref->{generic_matcher})/
                     || !$bad_type;
 
             my $msg;
@@ -759,7 +759,7 @@ sub _convert_to_regex {
                      $var_name =~ s/(\s+)\[\\s\\0\\1]\*/$1/gxms;
                      my $type = $arg->{var}{$var_name}{type} || q{};
                      push @{$arg->{placeholders}}, $var_name;
-                     my $matcher = $type =~ m{\A\s*/.*/\s*\z}xms
+                     my $matcher = $type =~ m{\A\s*/.*/\s*\z}
                                         ? eval "qr$type"
                                         : $STD_MATCHER_FOR{ $type }
                          or _fail("Unknown type ($type) in specification: $arg_name");
@@ -789,7 +789,7 @@ sub _convert_to_regex {
                        $var_name =~ s/(\s+)\[\\s\\0\\1]\*/$1/gxms;
                        my $type = $arg->{var}{$var_name}{type} || q{};
                        my $type_error = $arg->{var}{$var_name}{type_error} || q{};
-                       my $matcher = $type =~ m{\A\s*/.*/\s*\z}xms
+                       my $matcher = $type =~ m{\A\s*/.*/\s*\z}
                                         ? eval "qr$type"
                                         : $STD_MATCHER_FOR{ $type };
                        "(?:($matcher|([^\\s\\0\\1]+)"
@@ -827,9 +827,9 @@ sub _get_variants {
     }
 
     # Only consider first "word"...
-    return $1 if $arg_desc[0] =~ m/\A (< [^>]+ >)/xms;
+    return $1 if $arg_desc[0] =~ m/\A (< [^>]+ >)/;
 
-    $arg_desc[0] =~ s/\A ([^\s<]+) \s* (?: < .*)? \z/$1/xms;
+    $arg_desc[0] =~ s/\A ([^\s<]+) \s* (?: < .*)? \z/$1/;
 
     # Variants are all those with and without each optional component...
     my %variants;
@@ -837,20 +837,20 @@ sub _get_variants {
         my $arg_desc_with    = shift @arg_desc;
         my $arg_desc_without = $arg_desc_with;
 
-        if ( $arg_desc_without =~ s/ \[ [^][]* \] //xms ) {
+        if ( $arg_desc_without =~ s/ \[ [^][]* \] // ) {
             push @arg_desc, $arg_desc_without;
         }
-        if ( $arg_desc_with =~ m/ [[(] ([^][()]*) [])] /xms ) {
+        if ( $arg_desc_with =~ m/ [[(] ([^][()]*) [])] / ) {
             my $option = $1;
             for my $alternative ( split /[|]/, $option ) {
                 my $arg_desc = $arg_desc_with;
-                $arg_desc =~ s{[[(] [^][()]* [])]}{$alternative}xms;
+                $arg_desc =~ s{[[(] [^][()]* [])]}{$alternative};
                 push @arg_desc, $arg_desc;
             }
         }
 
         $arg_desc_with =~ s/[][]//gxms;
-        $arg_desc_with =~ s/\b[^-\w] .* \z//xms;
+        $arg_desc_with =~ s/\b[^-\w] .* \z//;
         $variants{$arg_desc_with} = 1;
     }
 
