@@ -36,6 +36,7 @@ my %WriteMakefileArgs = (
     'List::MoreUtils' => '0',
     'List::Util' => '0',
     'Modern::Perl' => '0',
+    'Path::Class' => '0',
     'Pod::Text' => '0',
     'autodie' => '0',
     're' => '0',
