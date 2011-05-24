@@ -114,7 +114,8 @@ sub import {
     my $minimal_keys;
     my $vars_prefix;
     @_ = grep { !( /:minimal_keys/ and $minimal_keys = 1 ) } @_;
-    @_ = grep { !( /:vars(?:<(\w+)>)?/ and $vars_prefix = $1 || 'ARGV_' ) }
+    @_
+        = grep { !( /:vars(?:<(\w+)>)?/ and $vars_prefix = ( $1 or 'ARGV_' ) ) }
         @_;
     croak "Unknown mode ('$_')" for @_;
 
