@@ -33,6 +33,7 @@ my %WriteMakefileArgs = (
     'IO::Interactive' => '0',
     'IO::Page' => '0',
     'IO::Pager::Page' => '0',
+    'List::MoreUtils' => '0',
     'List::Util' => '0',
     'Modern::Perl' => '0',
     'Pod::Text' => '0',

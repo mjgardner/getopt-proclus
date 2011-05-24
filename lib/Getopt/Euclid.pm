@@ -20,8 +20,9 @@ BEGIN {
 use autodie;
 use Carp;
 use English '-no_match_vars';
-use File::Spec::Functions qw(splitpath);
-use List::Util qw( first );
+use File::Spec::Functions 'splitpath';
+use List::Util 'first';
+use List::MoreUtils 'apply';
 use IO::Interactive 'is_interactive';
 ## no critic (RequireDotMatchAnything,RequireExtendedFormatting)
 ## no critic (RequireLineBoundaryMatching)
@@ -446,8 +447,8 @@ ARG:
     # Run matcher...
     my $all_args_ref = { %options, %requireds };
 
-    my $argv = join q{ },
-        map { my $arg = $_; $arg =~ tr/ \t/\0\1/; $arg } @ARGV;
+    my $argv = join q{ }, apply {tr/ \t/\0\1/} @ARGV;
+
     if ( my $error = _doesnt_match( $matcher, $argv, $all_args_ref ) ) {
         _bad_arglist($error);
     }
@@ -846,7 +847,7 @@ sub _get_variants {
     }
 
     # Only consider first "word"...
-    return $1 if $arg_desc[0] =~ m/\A (< [^>]+ >)/xms;
+    if ( $arg_desc[0] =~ m/\A (< [^>]+ >)/xms ) { return $1 }
 
     $arg_desc[0] =~ s/\A ([^\s<]+) \s* (?: < .*)? \z/$1/xms;
 
