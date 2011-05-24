@@ -9,6 +9,7 @@ use File::Spec::Functions 'splitpath';
 use List::Util 'first';
 use List::MoreUtils 'apply';
 use IO::Interactive 'is_interactive';
+use Path::Class;
 ## no critic (RequireDotMatchAnything,RequireExtendedFormatting)
 ## no critic (RequireLineBoundaryMatching)
 
@@ -118,10 +119,9 @@ sub import {
     if ( $caller[1] =~ m/[.]pm \z/xms ) {
 
         # Save module's POD...
-        open my $fh, '<', $caller[1]
+        push @std_POD, scalar file( $caller[1] )->slurp()
             or croak
             "Getopt::Euclid was unable to access POD\n($OS_ERROR)\nProblem was";
-        push @std_POD, do { local $INPUT_RECORD_SEPARATOR; <$fh> };
 
         # Install this import() sub as module's import sub...
         no strict 'refs';
@@ -140,10 +140,9 @@ sub import {
     $has_run = 1;
 
     # Acquire POD source...
-    open my $fh, '<', $PROGRAM_NAME
+    my $source = file($PROGRAM_NAME)->slurp()
         or croak
         "Getopt::Euclid was unable to access POD\n($OS_ERROR)\nProblem was";
-    my $source = do { local $INPUT_RECORD_SEPARATOR; <$fh> };
 
     # Clean up line delimeters
     for ( $source, @std_POD ) {s{ [\n\r] }{\n}gx}
@@ -816,6 +815,7 @@ sub _print_and_exit {
         open my $pod_handle, '<', \$pod;
         my $parser = Pod::Text->new( sentence => 0, width => 78 );
         $parser->parse_from_filehandle($pod_handle);
+        close $pod_handle;
     }
     else {
         print $pod;
