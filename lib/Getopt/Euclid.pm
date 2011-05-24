@@ -17,6 +17,7 @@ BEGIN {
 
 # ABSTRACT: Executable Uniform Command-Line Interface Descriptions
 
+use Modern::Perl;
 use Carp;
 use English '-no_match_vars';
 use File::Spec::Functions qw(splitpath);
@@ -113,11 +114,11 @@ sub import {
     shift @_;
     my $minimal_keys;
     my $vars_prefix;
-    @_ = grep { !( /:minimal_keys/ and $minimal_keys = 1 ) } @_;
-    @_
-        = grep { !( /:vars(?:<(\w+)>)?/ and $vars_prefix = ( $1 or 'ARGV_' ) ) }
-        @_;
-    croak "Unknown mode ('$_')" for @_;
+    given (@_) {
+        when (/:minimal_keys/) { $minimal_keys = 1 }
+        when (/:vars(?:<(\w+)>)?/) { $vars_prefix = ( $1 or 'ARGV_' ) }
+        default { croak "Unknown mode ('$_')" }
+    }
 
     if ($has_run) {
         carp 'Getopt::Euclid loaded a second time';
