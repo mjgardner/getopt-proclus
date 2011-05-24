@@ -1,3 +1,7 @@
+#!perl
+
+use vars qw($INFILE $OUTFILE $LEN $H $W $TIMEOUT);
+
 BEGIN {
     $INFILE  = $0;
     $OUTFILE = $0;
@@ -127,4 +131,3 @@ Copyright (c) 2002, Damian Conway. All Rights Reserved.
 This module is free software. It may be used, redistributed
 and/or modified under the terms of the Perl Artistic License
   (see http://www.perl.com/perl/misc/Artistic.html)
-

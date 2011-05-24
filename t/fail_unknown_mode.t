@@ -1,3 +1,5 @@
+#!perl
+
 use Test::More 'no_plan';
 
 BEGIN {

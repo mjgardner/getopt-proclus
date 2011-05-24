@@ -1,3 +1,5 @@
+#!perl
+
 BEGIN {
     @ARGV = qw/ -a foo /;
 }

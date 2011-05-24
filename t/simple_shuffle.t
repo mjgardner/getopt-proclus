@@ -1,3 +1,7 @@
+#!perl
+
+use vars qw($INFILE $OUTFILE $LEN $H $W $TIMEOUT);
+
 BEGIN {
     $INFILE  = $0;
     $OUTFILE = '-';

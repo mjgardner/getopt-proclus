@@ -1,3 +1,5 @@
+#!perl
+
 BEGIN {
     @ARGV = ( "-e1with space1", "-e2", "with space2", "-e3", "with", "space3",
     );

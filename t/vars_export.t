@@ -1,3 +1,5 @@
+#!perl
+
 our ( $INFILE, $OUTFILE, $LEN, $H, $W, $TIMEOUT );
 
 BEGIN {

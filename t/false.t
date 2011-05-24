@@ -1,3 +1,5 @@
+#!perl
+
 BEGIN {
     @ARGV
         = ( "-norequired", "-optionalless", "--unabbr", "-necessary", "--opt",
@@ -113,4 +115,3 @@ Copyright (c) 2002, Damian Conway. All Rights Reserved.
 This module is free software. It may be used, redistributed
 and/or modified under the terms of the Perl Artistic License
   (see http://www.perl.com/perl/misc/Artistic.html)
-

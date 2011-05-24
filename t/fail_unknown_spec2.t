@@ -1,3 +1,5 @@
+#!perl
+
 use Test::More 'no_plan';
 
 BEGIN {
@@ -6,6 +8,8 @@ BEGIN {
     open *STDERR, '>', \my $stderr;
     *CORE::GLOBAL::exit = sub { die $stderr };
 }
+
+use vars qw($INFILE $OUTFILE $LEN $H $W $TIMEOUT);
 
 BEGIN {
     $INFILE  = $0;
