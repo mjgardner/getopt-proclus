@@ -385,7 +385,7 @@ ARG:
     # Handle standard args...
     given ( \@ARGV ) {
         no warnings 'closure';
-        when ( first {/ --man /xms} @{$_} ) {
+        when ( first { $_ and m/ --man /xms } @{$_} ) {
             _print_and_exit( $pod, 'paged' )
         }
         when ( first { $_ and $_ eq '--usage' } @{$_} ) {
