@@ -86,7 +86,7 @@ This documentation refers to orchestrate version 1.9.4
 
 =over
 
-=item  -i[nfile]  [=]E<lt>fileE<gt>    
+=item  -i[nfile]  [=]E<lt>fileE<gt>
 
 Specify input file
 
@@ -94,7 +94,7 @@ Specify input file
     file.type:    readable
     file.default: '-'
 
-=item  -o[ut][file]= E<lt>out_fileE<gt>    
+=item  -o[ut][file]= E<lt>out_fileE<gt>
 
 Specify output file
 
