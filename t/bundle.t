@@ -10,16 +10,15 @@
 use utf8;
 use Modern::Perl;
 
-use Readonly;
 use vars qw($INFILE $OUTFILE $LEN $H $W $TIMEOUT);
 
 BEGIN {
-    Readonly our $INFILE  => 1;
-    Readonly our $OUTFILE => 1;
-    Readonly our $LEN     => 42;
-    Readonly our $H       => 2;
-    Readonly our $W       => -10;
-    Readonly our $TIMEOUT => 7;
+    $INFILE  = 1;
+    $OUTFILE = 1;
+    $LEN     = 42;
+    $H       = 2;
+    $W       = -10;
+    $TIMEOUT = 7;
 
     @ARGV = ( "-io", "size ${H}x${W}", "-vl $LEN", "--timeout $TIMEOUT", );
 }

@@ -19,6 +19,8 @@ BEGIN {
     *CORE::GLOBAL::exit = sub { die $stderr };
 }
 
+use vars qw($INFILE $OUTFILE $LEN $H $W $TIMEOUT);
+
 BEGIN {
     $INFILE  = $0;
     $OUTFILE = $0;
