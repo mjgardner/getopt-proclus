@@ -886,6 +886,7 @@ sub _export_var {
     my $callpkg = caller( 1 + ( $Exporter::ExportLevel || 0 ) );
     no strict 'refs';
     *{"$callpkg\::$export_as"} = ( ref $value ) ? $value : \$value;
+    return;
 }
 
 1;    # Magic true value required at end of module
