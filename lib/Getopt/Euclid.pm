@@ -18,6 +18,7 @@ BEGIN {
 # ABSTRACT: Executable Uniform Command-Line Interface Descriptions
 
 use Carp;
+use English '-no_match_vars';
 use File::Spec::Functions qw(splitpath);
 use List::Util qw( first );
 
@@ -50,11 +51,11 @@ my %STD_CONSTRAINT_FOR = (
     'number'    => sub {1},              # Always okay (matcher ensures this)
     '+number'   => sub { $_[0] > 0 },
     '0+number'  => sub { $_[0] >= 0 },
-    'input' => sub { $_[0] eq '-' || -r $_[0] },
+    'input' => sub { $_[0] eq q{-} || -r $_[0] },
     'output' => sub {
         my ( undef, $dir ) = splitpath( $_[0] );
-        $dir ||= '.';
-        $_[0] eq '-' ? 1 : -e $_[0] ? -w $_[0] : -w $dir;
+        $dir ||= q{.};
+        $_[0] eq q{-} ? 1 : -e $_[0] ? -w $_[0] : -w $dir;
     },
 );
 
@@ -255,7 +256,7 @@ NAME:
         };
         if ($minimal_keys) {
             my $minimal = _minimize_name($name);
-            croak "Internal error: minimalist mode caused arguments",
+            croak 'Internal error: minimalist mode caused arguments',
                 "'$name' and '$seen{$minimal}' to clash"
                 if $seen{$minimal};
             $seen{$minimal} = $name;
@@ -273,7 +274,7 @@ NAME:
         };
         if ($minimal_keys) {
             my $minimal = _minimize_name($name);
-            croak "Internal error: minimalist mode caused arguments",
+            croak 'Internal error: minimalist mode caused arguments',
                 "'$name' and '$seen{$minimal}' to clash"
                 if $seen{$minimal};
             $seen{$minimal} = $name;
@@ -284,7 +285,7 @@ NAME:
 
     # Extract Euclid information...
 ARG:
-    for my $arg ( values(%requireds), values(%options) ) {
+    for my $arg ( values %requireds, values %options ) {
         $arg->{src} =~ s{^ =for \s+ Euclid\b [^\n]* \s* (.*) \z}{}ixms
             or next ARG;
         my $info = $1;
@@ -303,7 +304,7 @@ ARG:
         }
 
         while ( $info
-            =~ m{\G \s* (([^.]+)\.([^:=\s]+) \s*[:=]\s* ([^\n]*)) }gcxms )
+            =~ m{\G \s* (([^.]+)[.]([^:=\s]+) \s*[:=]\s* ([^\n]*)) }gcxms )
         {
             my ( $spec, $var, $field, $val ) = ( $1, $2, $3, $4 );
 
@@ -320,7 +321,8 @@ ARG:
             }
             elsif ( $field eq 'type' ) {
                 my ( $matchtype, $comma, $constraint )
-                    = $val =~ m{(/(?:\.|.)+/ | [^,\s]+)\s*(?:(,))?\s*(.*)}xms;
+                    = $val
+                    =~ m{(/(?:[.]|.)+/ | [^,\s]+)\s*(?:(,))?\s*(.*)}xms;
                 $arg->{var}{$var}{type} = $matchtype;
 
                 if ( $comma && length $constraint ) {
@@ -361,7 +363,7 @@ ARG:
     }
 
     # Build one-line representation of interface...
-    my $arg_summary = join ' ',
+    my $arg_summary = join q{ },
         sort { $requireds{$a}{seq} <=> $requireds{$b}{seq} }
         keys %requireds;
     1 while $arg_summary =~ s/\[ [^][]* \]//gxms;
@@ -410,7 +412,7 @@ ARG:
     # Build matcher...
 
     my @arg_list = ( values(%requireds), values(%options) );
-    my $matcher = join '|', map { $_->{matcher} }
+    my $matcher = join q{|}, map { $_->{matcher} }
         sort( { $b->{name} cmp $a->{name} } grep { $_->{name} =~ /^[^<]/ }
             @arg_list ),
         sort( { $a->{seq} <=> $b->{seq} } grep { $_->{name} =~ /^[<]/ }
@@ -541,7 +543,7 @@ sub AUTOLOAD {
     our $AUTOLOAD;
     $AUTOLOAD =~ s{.*::}{main::}xms;
     no strict 'refs';
-    goto &$AUTOLOAD;
+    goto &{$AUTOLOAD};
 }
 
 sub _minimize_name {
@@ -697,8 +699,8 @@ ARG:
                                 )
                                 if $arg_vars->{$var}{constraint}
                                     && !$arg_vars->{$var}{constraint}->($val);
-                            $entry->{$var} = ''
-                                unless defined( $ARGV{$arg_name} );
+                            $entry->{$var} = q{}
+                                unless defined $ARGV{$arg_name};
                         }
                         next VAR;
                     }
@@ -749,7 +751,7 @@ sub _convert_to_regex {
 
         $regex =~ s/ (\s+) /$1.'[\\s\\0\\1]*'/egxms;
         my $generic = $regex;
-        $regex =~ s{ < (.*?) >(\.\.\.|) }
+        $regex =~ s{ < (.*?) >([.]{3}|) }
                    { my ($var_name, $var_rep) = ($1, $2);
                      $var_name =~ s/(\s+)\[\\s\\0\\1]\*/$1/gxms;
                      my $type = $arg->{var}{$var_name}{type} || q{};
@@ -1024,7 +1026,8 @@ remove the command-line arguments from C<@ARGV> and parse them, and
 =item 5.
 
 put the results in the global C<%ARGV> variable (or into specifically named
-optional variables, if you request that -- see L<Exporting Option Variables>).
+optional variables, if you request that -- see
+L</"Exporting Option Variables">).
 
 =back
 
@@ -1037,7 +1040,7 @@ that it adds the POD from the caller module to the POD of the callee.
 
 All of which just means you can put some or all of your CLI specification
 in a module, rather than in the application's source file.
-See L<Module Interface> for more details.
+See L</"Module Interface"> for more details.
 
 =head1 INTERFACE
 
@@ -1086,7 +1089,7 @@ the following POD documentation:
 
 Getopt::Euclid ignores the name specified here. In fact, if you use the
 standard C<--help>, C<--usage>, C<--man>, or C<--version> arguments (see
-L<Standard arguments>), the module replaces the name specified in this
+L</"Standard arguments">), the module replaces the name specified in this
 POD section with the actual name by which the program was invoked (i.e.
 with C<$0>).
 
@@ -1128,7 +1131,7 @@ Euclid stores the version as C<$Getopt::Euclid::SCRIPT_VERSION>.
 Getopt::Euclid uses the specifications in this POD section to build a
 parser for command-line arguments. That parser requires that every one
 of the specified arguments is present in any command-line invocation.
-See L<Specifying arguments> for details of the specification syntax.
+See L</"Specifying arguments"> for details of the specification syntax.
 
 The actual headings that Getopt::Euclid can recognize here are:
 
@@ -1139,7 +1142,7 @@ The actual headings that Getopt::Euclid can recognize here are:
 Getopt::Euclid uses the specifications in this POD section to build a
 parser for command-line arguments. That parser does not require that any
 of the specified arguments is actually present in a command-line invocation.
-Again, see L<Specifying arguments> for details of the specification syntax.
+Again, see L</"Specifying arguments"> for details of the specification syntax.
 
 Typically a program will specify both C<REQUIRED ARGUMENTS> and C<OPTIONS>,
 but there is no requirement that it supply both, or either.
@@ -1256,7 +1259,7 @@ more than once, using the C<repeatable> option:
 
 When an argument is marked repeatable the corresponding entry of C<%ARGV> will
 not contain a single value, but rather an array reference. If the argument also
-has L<Multiple placeholders>, then the corresponding entry in C<%ARGV> will be
+has L</"Multiple placeholders">, then the corresponding entry in C<%ARGV> will be
 an array reference with each array entry being a hash reference.
 
 =head2 Boolean arguments
@@ -1350,7 +1353,7 @@ or:
 
 on the command-line. If the second placeholder value is not provided, the
 corresponding C<$ARGV{'-size'}{'w'}> entry is set to C<undef>. See also
-L<Placeholder defaults>.
+L</"Placeholder defaults">.
 
 =head2 Unflagged placeholders
 
@@ -1392,7 +1395,7 @@ Any placeholder that is immediately followed by C<...>, like so:
 
 will match as many times as possible, but at least once. Note that
 this implies that an unconstrained repeated unflagged placeholder
-(see L<Placeholder constraints> and L<Unflagged placeholders>) will
+(see L</"Placeholder constraints"> and L</"Unflagged placeholders">) will
 consume the rest of the command-line, and so should be specified last
 in the POD.
 
@@ -1769,7 +1772,7 @@ or else the module simply doesn't know about the type you specified:
     =for Euclid
         count.type: complex
 
-See L<Standard placeholder types> for a list of types that Getopt::Euclid
+See L</"Standard placeholder types"> for a list of types that Getopt::Euclid
 I<does> recognize.
 
 =item Invalid .type constraint: %s
@@ -1824,7 +1827,7 @@ Getopt::Euclid doesn't work that way. Load it only once.
 =item Unknown mode ('%s')
 
 The only argument that a C<use Getopt::Euclid> command accepts is
-C<':minimal_keys'> (see L<Minimalist keys>). You specified something
+C<':minimal_keys'> (see L</"Minimalist keys">). You specified something
 else instead (or possibly forgot to put a semicolon after C<use
 Getopt::Euclid>).
 
