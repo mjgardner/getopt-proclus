@@ -155,7 +155,7 @@ sub import {
     $has_run = 1;
 
     # Acquire POD source...
-    my $source = file($PROGRAM_NAME)->slurp( chomp => 1 )
+    my $source = file($PROGRAM_NAME)->slurp()
         or croak
         "Getopt::Euclid was unable to access POD\n($OS_ERROR)\nProblem was";
 
