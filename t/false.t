@@ -1,26 +1,22 @@
 BEGIN {
-    @ARGV = (
-        "-norequired",
-        "-optionalless",
-        "--unabbr",
-        "-necessary",
-        "--opt",
-    );
+    @ARGV
+        = ( "-norequired", "-optionalless", "--unabbr", "-necessary", "--opt",
+        );
 }
 
 use Getopt::Euclid;
 use Test::More 'no_plan';
 
 sub got_arg {
-    my ($key, $val) = @_;
+    my ( $key, $val ) = @_;
     is $ARGV{$key}, $val, "Got expected value for $key";
 }
 
-got_arg -norequired   => 1;
-got_arg -required     => 0;
+got_arg -norequired => 1;
+got_arg -required   => 0;
 
-got_arg -necessary    => 1;
-got_arg -unnecessary  => 0;
+got_arg -necessary   => 1;
+got_arg -unnecessary => 0;
 
 got_arg -optional     => 0;
 got_arg -optionalless => 1;
@@ -32,9 +28,8 @@ got_arg '--unabbr'        => 1;
 got_arg '--unabbrev'      => 1;
 got_arg '--unabbreviated' => 1;
 
-got_arg '--opt'           => 1;
-got_arg '--optout'        => undef;
-
+got_arg '--opt'    => 1;
+got_arg '--optout' => undef;
 
 __END__
 

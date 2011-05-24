@@ -7,14 +7,11 @@ BEGIN {
     $TIMEOUT = 7;
 
     @ARGV = (
-        "-i   $INFILE",
-        "-out=", $OUTFILE,
-        "-lgth $LEN",
-        "size ${H}x${W}",
-        '-v',
-        "--timeout $TIMEOUT",
-        '-w', 's p a c e s',
-        7,
+        "-i   $INFILE",       "-out=",
+        $OUTFILE,             "-lgth $LEN",
+        "size ${H}x${W}",     '-v',
+        "--timeout $TIMEOUT", '-w',
+        's p a c e s',        7,
     );
 
     chmod 0644, $0;
@@ -30,11 +27,11 @@ use Getopt::Euclid;
 use Test::More 'no_plan';
 
 sub got_arg {
-    my ($key, $val) = @_;
+    my ( $key, $val ) = @_;
     is $ARGV{$key}, $val, "Got expected value for $key";
 }
 
-is_deeply \@ARGV, []    =>   '@ARGV emptied on success';
+is_deeply \@ARGV, [] => '@ARGV emptied on success';
 
 __END__
 
