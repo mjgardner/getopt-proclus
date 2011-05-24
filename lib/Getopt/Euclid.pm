@@ -21,6 +21,8 @@ use Carp;
 use English '-no_match_vars';
 use File::Spec::Functions qw(splitpath);
 use List::Util qw( first );
+## no critic (RequireDotMatchAnything,RequireExtendedFormatting)
+## no critic (RequireLineBoundaryMatching)
 
 # Convert arg specification syntax to Perl regex syntax
 
