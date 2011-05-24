@@ -37,8 +37,6 @@ t/false.t
 t/hier.t
 t/hier_export.t
 t/minimal.t
-t/pod-coverage.t
-t/pod.t
 t/pod_cmd_after_cut.t
 t/quoted_args.t
 t/regex_type.t
