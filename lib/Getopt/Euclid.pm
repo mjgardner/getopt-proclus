@@ -1,9 +1,7 @@
 package Getopt::Euclid;
 
-use version; $VERSION = qv('0.2.3');
+# ABSTRACT: Executable Uniform Command-Line Interface Descriptions
 
-use warnings;
-use strict;
 use Carp;
 use File::Spec::Functions qw(splitpath);
 use List::Util qw( first );
@@ -843,14 +841,6 @@ sub _export_var {
 
 1;                                 # Magic true value required at end of module
 
-=head1 NAME
-
-Getopt::Euclid - Executable Uniform Command-Line Interface Descriptions
-
-=head1 VERSION
-
-This document describes Getopt::Euclid version 0.2.3
-
 =head1 SYNOPSIS
 
     use Getopt::Euclid;
@@ -883,7 +873,7 @@ This document describes Getopt::Euclid version 0.2.3
 
     =over
 
-    =item  -s[ize]=<h>x<w>    
+    =item  -s[ize]=<h>x<w>
 
     Specify size of simulation
 
@@ -893,7 +883,7 @@ This document describes Getopt::Euclid version 0.2.3
         w.type:    int >= 10
         w.default: 80
 
-    =item  -o[ut][file] <file>    
+    =item  -o[ut][file] <file>
 
     Specify output file
 
@@ -948,8 +938,8 @@ This document describes Getopt::Euclid version 0.2.3
     This module is free software. It may be used, redistributed
     and/or modified under the terms of the Perl Artistic License
     (see http://www.perl.com/perl/misc/Artistic.html)
-  
-  
+
+
 =head1 DESCRIPTION
 
 Getopt::Euclid uses your program's own documentation to create a command-line
@@ -977,7 +967,7 @@ locate any POD in the same file,
 
 =item 2.
 
-extract information from that POD, most especially from 
+extract information from that POD, most especially from
 the C<=head1 REQUIRED ARGUMENTS> and C<=head1 OPTIONS> sections,
 
 =item 3.
@@ -1006,7 +996,7 @@ All of which just means you can put some or all of your CLI specification
 in a module, rather than in the application's source file.
 See L<Module Interface> for more details.
 
-=head1 INTERFACE 
+=head1 INTERFACE
 
 =head2 Program Interface
 
@@ -1073,13 +1063,13 @@ accepts one or more additional trailing .I<< <digit> >> or _I<< <digit> >>,
 allowing for multi-level and "alpha" version numbers such as:
 
     =head1 VERSION
-    
+
     This is version 1.2.3
-    
+
 or:
 
     =head1 VERSION
-    
+
     This is alpha release 1.2_34
 
 You may also specify the version number in your code. However, in order for
@@ -1140,7 +1130,7 @@ format:
 
 =head3 Argument structure
 
-=over 
+=over
 
 =item *
 
@@ -1179,7 +1169,7 @@ For example, the argument specification:
 indicates that any of the following may appear on the command-line:
 
     -idata.txt    -i data.txt    -i=data.txt    -i = data.txt
-                                     
+
     -indata.txt   -in data.txt   -in=data.txt   -in = data.txt
 
     --from data.text
@@ -1191,7 +1181,7 @@ Any of the above variations would cause all three of:
     $ARGV{'-i'}
     $ARGV{'-in'}
     $ARGV{'--from'}
-    
+
 to be set to the string C<'data.txt'>.
 
 You could allow the optional C<=> to also be an optional colon by specifying:
@@ -1244,7 +1234,7 @@ they appear. For example, a common idiom is:
 
 These two arguments are effectively the same argument, just with opposite
 boolean values. However, as specified above, only one of C<$ARGV{'--print'}>
-and C<$ARGV{'--noprint'}> will be set. 
+and C<$ARGV{'--noprint'}> will be set.
 
 As an alternative you can specify a single argument that accepts either value
 and sets both appropriately:
@@ -1462,7 +1452,7 @@ Getopt::Euclid recognizes the following standard placeholder types:
                     (or of a non-existent
                     file in a writeable
                     directory)
-                    
+
     /<regex>/       ...must be a string
                     matching the specified
                     pattern
@@ -1811,7 +1801,7 @@ one of the options so that the two no longer clash.
 
 The following diagnostics are caused by problems in parsing the command-line
 
-=over 
+=over
 
 =item Missing required argument(s): %s
 
@@ -1835,63 +1825,3 @@ interface specification.
 =head1 CONFIGURATION AND ENVIRONMENT
 
 Getopt::Euclid requires no configuration files or environment variables.
-
-=head1 DEPENDENCIES
-
-=over 
-
-=item *
-
-File::Spec::Functions
-
-=item *
-
-List::Util
-
-=back
-
-=head1 INCOMPATIBILITIES
-
-None reported.
-
-=head1 BUGS AND LIMITATIONS
-
-Please report any bugs or feature requests to
-C<bug-getopt-euclid@rt.cpan.org>, or through the web interface at
-L<http://rt.cpan.org>.
-
-=head1 AUTHOR
-
-Damian Conway  C<< <DCONWAY@cpan.org> >>
-
-Kevin Galinsky C<< <kgalinsky+cpan at gmail.com> >>
-
-=head1 LICENCE AND COPYRIGHT
-
-Copyright (c) 2005, Damian Conway C<< <DCONWAY@cpan.org> >>. All rights reserved.
-
-This module is free software; you can redistribute it and/or
-modify it under the same terms as Perl itself.
-
-=head1 DISCLAIMER OF WARRANTY
-
-BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
-FOR THE SOFTWARE, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN
-OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES
-PROVIDE THE SOFTWARE "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER
-EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE
-ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE SOFTWARE IS WITH
-YOU. SHOULD THE SOFTWARE PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL
-NECESSARY SERVICING, REPAIR, OR CORRECTION.
-
-IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING
-WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY AND/OR
-REDISTRIBUTE THE SOFTWARE AS PERMITTED BY THE ABOVE LICENCE, BE
-LIABLE TO YOU FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL,
-OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE
-THE SOFTWARE (INCLUDING BUT NOT LIMITED TO LOSS OF DATA OR DATA BEING
-RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD PARTIES OR A
-FAILURE OF THE SOFTWARE TO OPERATE WITH ANY OTHER SOFTWARE), EVEN IF
-SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF
-SUCH DAMAGES.

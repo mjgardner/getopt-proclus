@@ -33,8 +33,6 @@ BEGIN {
 use Getopt::Euclid qw( :vars<opt_> );
 use Test::More 'no_plan';
 
-use strict;
-
 sub got_arg {
     my ($key, $val) = @_;
     my $var_name = "opt_$key";
@@ -107,7 +105,7 @@ This documentation refers to orchestrate version 1.9.4
 
 =over
 
-=item  -i[nfile]  [=]<file>    
+=item  -i[nfile]  [=]<file>
 
 Specify input file
 
@@ -115,7 +113,7 @@ Specify input file
     file.type:    readable
     file.default: '-'
 
-=item  -o[ut][file]= <file>    
+=item  -o[ut][file]= <file>
 
 Specify output file
 
@@ -231,4 +229,3 @@ Copyright (c) 2002, Damian Conway. All Rights Reserved.
 This module is free software. It may be used, redistributed
 and/or modified under the terms of the Perl Artistic License
   (see http://www.perl.com/perl/misc/Artistic.html)
-
