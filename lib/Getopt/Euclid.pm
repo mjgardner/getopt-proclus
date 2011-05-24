@@ -580,7 +580,7 @@ sub _doesnt_match {
     local @errors = ();
     %ARGV = ();
 
-    $argv =~ m{\A (?: \s* $matcher )* \s* \z};
+    $argv =~ m{\A (?: \s* (?:$matcher) )* \s* \z};
 
     for my $error (@errors) {
         if ( $error =~ m/\A ((\W) (\w) (\w+))/ ) {
