@@ -134,7 +134,7 @@ sub import {
     if ( $caller[1] =~ m/[.]pm \z/xms ) {
 
         # Save module's POD...
-        @std_POD = file( $caller[1] )->slurp( chomp => 1 )
+        @std_POD = file( $caller[1] )->slurp()
             or croak
             "Getopt::Euclid was unable to access POD\n($OS_ERROR)\nProblem was";
 
