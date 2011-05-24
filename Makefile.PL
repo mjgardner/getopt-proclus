@@ -35,7 +35,6 @@ my %WriteMakefileArgs = (
     'List::Util' => '0',
     'Modern::Perl' => '0',
     'Pod::Text' => '0',
-    'Regexp::DefaultFlags' => '0',
     're' => '0',
     'utf8' => '0'
   },
