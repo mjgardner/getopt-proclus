@@ -1,4 +1,4 @@
-#!perl -T
+#!perl
 #
 # This file is part of Getopt-Proclus
 #
