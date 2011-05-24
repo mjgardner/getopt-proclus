@@ -114,7 +114,7 @@ sub import {
     my $minimal_keys;
     my $vars_prefix;
     @_ = grep { !( /:minimal_keys/ and $minimal_keys = 1 ) } @_;
-    @_ = grep { !( /:vars(?:<(\w+)>)?/ and $vars_prefix = $1 || "ARGV_" ) }
+    @_ = grep { !( /:vars(?:<(\w+)>)?/ and $vars_prefix = $1 || 'ARGV_' ) }
         @_;
     croak "Unknown mode ('$_')" for @_;
 
@@ -414,11 +414,14 @@ ARG:
     # Build matcher...
 
     my @arg_list = ( values %requireds, values %options );
-    my $matcher = join q{|}, map { $_->{matcher} }
-        sort( { $b->{name} cmp $a->{name} } grep { $_->{name} =~ /^[^<]/ }
-            @arg_list ),
-        sort( { $a->{seq} <=> $b->{seq} } grep { $_->{name} =~ /^[<]/ }
-            @arg_list );
+    my $matcher = join q{|}, map { $_->{matcher} } (
+        reverse sort { $a->{name} cmp $b->{name} }
+            grep { $_->{name} =~ /^[^<]/ } @arg_list
+        ),
+        (
+        sort { $a->{seq} <=> $b->{seq} }
+        grep { $_->{name} =~ /^[<]/ } @arg_list
+        );
 
     $matcher .= '|(?> (.+)) (?{ push @errors, $^N }) (?!)';
 
@@ -535,6 +538,7 @@ ARG:
     if ($minimal_keys) {
         _minimize_entries_of( \%ARGV );
     }
+    return;
 }
 
 # ###### Utility subs #############
