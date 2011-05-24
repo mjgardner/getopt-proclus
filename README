@@ -145,127 +145,6 @@ DESCRIPTION
     specification in a module, rather than in the application's source file.
     See "Module Interface" for more details.
 
-DIAGNOSTICS
-  Compile-time diagnostics
-    The following diagnostics are mainly caused by problems in the POD
-    specification of the command-line interface:
-
-    Getopt::Euclid was unable to access POD
-        Something is horribly wrong. Getopt::Euclid was unable to read your
-        program to extract the POD from it. Check your program's
-        permissions, though it's a mystery how *perl* was able to run the
-        program in the first place, if it's not readable.
-
-    .pm file cannot define an explicit import() when using Getopt::Euclid
-        You tried to define an "import()" subroutine in a module that was
-        also using Getopt::Euclid. Since the whole point of using
-        Getopt::Euclid in a module is to have it build an "import()" for
-        you, supplying your own "import()" as well defeats the purpose.
-
-    Unknown specification: %s
-        You specified something in a "=for Euclid" section that
-        Getopt::Euclid didn't understand. This is often caused by typos, or
-        by reversing a *placeholder*.*type* or *placeholder*.*default*
-        specification (that is, writing *type*.*placeholder* or
-        *default*.*placeholder* instead).
-
-    Unknown type (%s) in specification: %s
-    Unknown .type constraint: %s
-        Both these errors mean that you specified a type constraint that
-        Getopt::Euclid didn't recognize. This may have been a typo:
-
-            =for Euclid
-                count.type: inetger
-
-        or else the module simply doesn't know about the type you specified:
-
-            =for Euclid
-                count.type: complex
-
-        See "Standard placeholder types" for a list of types that
-        Getopt::Euclid *does* recognize.
-
-    Invalid .type constraint: %s
-        You specified a type constraint that isn't valid Perl. For example:
-
-            =for Euclid
-                max.type: integer not equals 0
-
-        instead of:
-
-            =for Euclid
-                max.type: integer != 0
-
-    Invalid .default value: %s
-        You specified a default value that isn't valid Perl. For example:
-
-            =for Euclid
-                curse.default: *$@!&
-
-        instead of:
-
-            =for Euclid
-                curse.default: '*$@!&'
-
-    Invalid constraint: %s (No <%s> placeholder in argument: %s)
-        You attempted to define a ".type" constraint for a placeholder that
-        didn't exist. Typically this is the result of the misspelling of a
-        placeholder name:
-
-            =item -foo <bar>
-
-            =for Euclid:
-                baz.type: integer
-
-        or a "=for Euclid:" that has drifted away from its argument:
-
-            =item -foo <bar>
-
-            =item -verbose
-
-            =for Euclid:
-                bar.type: integer
-
-    Getopt::Euclid loaded a second time
-        You tried to load the module twice in the same program.
-        Getopt::Euclid doesn't work that way. Load it only once.
-
-    Unknown mode ('%s')
-        The only argument that a "use Getopt::Euclid" command accepts is
-        ':minimal_keys' (see "Minimalist keys"). You specified something
-        else instead (or possibly forgot to put a semicolon after "use
-        Getopt::Euclid").
-
-    Internal error: minimalist mode caused arguments '%s' and '%s' to clash
-        Minimalist mode removes certain characters from the keys hat are
-        returned in %ARGV. This can mean that two command-line options (such
-        as "--step" and "<step>") map to the same key (i.e. 'step'). This in
-        turn means that one of the two options has overwritten the other
-        within the %ARGV hash. The program developer should either turn off
-        ':minimal_keys' mode within the program, or else change the name of
-        one of the options so that the two no longer clash.
-
-  Run-time diagnostics
-    The following diagnostics are caused by problems in parsing the
-    command-line
-
-    Missing required argument(s): %s
-        At least one argument specified in the "REQUIRED ARGUMENTS" POD
-        section wasn't present on the command-line.
-
-    Invalid %s argument. %s must be %s but the supplied value (%s) isn't.
-        Getopt::Euclid recognized the argument you were trying to specify on
-        the command-line, but the value you gave to one of that argument's
-        placeholders was of the wrong type.
-
-    Unknown argument: %s
-        Getopt::Euclid didn't recognize an argument you were trying to
-        specify on the command-line. This is often caused by command-line
-        typos or an incomplete interface specification.
-
-CONFIGURATION AND ENVIRONMENT
-    Getopt::Euclid requires no configuration files or environment variables.
-
 INTERFACE
   Program Interface
     You write:
@@ -913,6 +792,127 @@ INTERFACE
     Note that, in rare cases, using this mode may cause you to lose data
     (for example, if the interface specifies both a "--step" and a "<step>"
     option). The module throws an exception if this happens.
+
+DIAGNOSTICS
+  Compile-time diagnostics
+    The following diagnostics are mainly caused by problems in the POD
+    specification of the command-line interface:
+
+    Getopt::Euclid was unable to access POD
+        Something is horribly wrong. Getopt::Euclid was unable to read your
+        program to extract the POD from it. Check your program's
+        permissions, though it's a mystery how *perl* was able to run the
+        program in the first place, if it's not readable.
+
+    .pm file cannot define an explicit import() when using Getopt::Euclid
+        You tried to define an "import()" subroutine in a module that was
+        also using Getopt::Euclid. Since the whole point of using
+        Getopt::Euclid in a module is to have it build an "import()" for
+        you, supplying your own "import()" as well defeats the purpose.
+
+    Unknown specification: %s
+        You specified something in a "=for Euclid" section that
+        Getopt::Euclid didn't understand. This is often caused by typos, or
+        by reversing a *placeholder*.*type* or *placeholder*.*default*
+        specification (that is, writing *type*.*placeholder* or
+        *default*.*placeholder* instead).
+
+    Unknown type (%s) in specification: %s
+    Unknown .type constraint: %s
+        Both these errors mean that you specified a type constraint that
+        Getopt::Euclid didn't recognize. This may have been a typo:
+
+            =for Euclid
+                count.type: inetger
+
+        or else the module simply doesn't know about the type you specified:
+
+            =for Euclid
+                count.type: complex
+
+        See "Standard placeholder types" for a list of types that
+        Getopt::Euclid *does* recognize.
+
+    Invalid .type constraint: %s
+        You specified a type constraint that isn't valid Perl. For example:
+
+            =for Euclid
+                max.type: integer not equals 0
+
+        instead of:
+
+            =for Euclid
+                max.type: integer != 0
+
+    Invalid .default value: %s
+        You specified a default value that isn't valid Perl. For example:
+
+            =for Euclid
+                curse.default: *$@!&
+
+        instead of:
+
+            =for Euclid
+                curse.default: '*$@!&'
+
+    Invalid constraint: %s (No <%s> placeholder in argument: %s)
+        You attempted to define a ".type" constraint for a placeholder that
+        didn't exist. Typically this is the result of the misspelling of a
+        placeholder name:
+
+            =item -foo <bar>
+
+            =for Euclid:
+                baz.type: integer
+
+        or a "=for Euclid:" that has drifted away from its argument:
+
+            =item -foo <bar>
+
+            =item -verbose
+
+            =for Euclid:
+                bar.type: integer
+
+    Getopt::Euclid loaded a second time
+        You tried to load the module twice in the same program.
+        Getopt::Euclid doesn't work that way. Load it only once.
+
+    Unknown mode ('%s')
+        The only argument that a "use Getopt::Euclid" command accepts is
+        ':minimal_keys' (see "Minimalist keys"). You specified something
+        else instead (or possibly forgot to put a semicolon after "use
+        Getopt::Euclid").
+
+    Internal error: minimalist mode caused arguments '%s' and '%s' to clash
+        Minimalist mode removes certain characters from the keys hat are
+        returned in %ARGV. This can mean that two command-line options (such
+        as "--step" and "<step>") map to the same key (i.e. 'step'). This in
+        turn means that one of the two options has overwritten the other
+        within the %ARGV hash. The program developer should either turn off
+        ':minimal_keys' mode within the program, or else change the name of
+        one of the options so that the two no longer clash.
+
+  Run-time diagnostics
+    The following diagnostics are caused by problems in parsing the
+    command-line
+
+    Missing required argument(s): %s
+        At least one argument specified in the "REQUIRED ARGUMENTS" POD
+        section wasn't present on the command-line.
+
+    Invalid %s argument. %s must be %s but the supplied value (%s) isn't.
+        Getopt::Euclid recognized the argument you were trying to specify on
+        the command-line, but the value you gave to one of that argument's
+        placeholders was of the wrong type.
+
+    Unknown argument: %s
+        Getopt::Euclid didn't recognize an argument you were trying to
+        specify on the command-line. This is often caused by command-line
+        typos or an incomplete interface specification.
+
+CONFIGURATION AND ENVIRONMENT
+    Getopt::Euclid requires no configuration files or environment variables.
 
 SUPPORT
   Perldoc

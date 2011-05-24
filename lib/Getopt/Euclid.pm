@@ -1039,152 +1039,6 @@ All of which just means you can put some or all of your CLI specification
 in a module, rather than in the application's source file.
 See L<Module Interface> for more details.
 
-=head1 DIAGNOSTICS
-
-=head2 Compile-time diagnostics
-
-The following diagnostics are mainly caused by problems in the POD
-specification of the command-line interface:
-
-=over
-
-=item Getopt::Euclid was unable to access POD
-
-Something is horribly wrong. Getopt::Euclid was unable to read your
-program to extract the POD from it. Check your program's permissions,
-though it's a mystery how I<perl> was able to run the program in the
-first place, if it's not readable.
-
-=item .pm file cannot define an explicit import() when using Getopt::Euclid
-
-You tried to define an C<import()> subroutine in a module that was also
-using Getopt::Euclid. Since the whole point of using Getopt::Euclid in a
-module is to have it build an C<import()> for you, supplying your own
-C<import()> as well defeats the purpose.
-
-=item Unknown specification: %s
-
-You specified something in a C<=for Euclid> section that
-Getopt::Euclid didn't understand. This is often caused by typos, or by
-reversing a I<placeholder>.I<type> or I<placeholder>.I<default>
-specification (that is, writing I<type>.I<placeholder> or
-I<default>.I<placeholder> instead).
-
-=item Unknown type (%s) in specification: %s
-
-=item Unknown .type constraint: %s
-
-Both these errors mean that you specified a type constraint that
-Getopt::Euclid didn't recognize. This may have been a typo:
-
-    =for Euclid
-        count.type: inetger
-
-or else the module simply doesn't know about the type you specified:
-
-    =for Euclid
-        count.type: complex
-
-See L<Standard placeholder types> for a list of types that Getopt::Euclid
-I<does> recognize.
-
-=item Invalid .type constraint: %s
-
-You specified a type constraint that isn't valid Perl. For example:
-
-    =for Euclid
-        max.type: integer not equals 0
-
-instead of:
-
-    =for Euclid
-        max.type: integer != 0
-
-=item Invalid .default value: %s
-
-You specified a default value that isn't valid Perl. For example:
-
-    =for Euclid
-        curse.default: *$@!&
-
-instead of:
-
-    =for Euclid
-        curse.default: '*$@!&'
-
-=item Invalid constraint: %s (No <%s> placeholder in argument: %s)
-
-You attempted to define a C<.type> constraint for a placeholder that
-didn't exist. Typically this is the result of the misspelling of a
-placeholder name:
-
-    =item -foo <bar>
-
-    =for Euclid:
-        baz.type: integer
-
-or a C<=for Euclid:> that has drifted away from its argument:
-
-    =item -foo <bar>
-
-    =item -verbose
-
-    =for Euclid:
-        bar.type: integer
-
-=item Getopt::Euclid loaded a second time
-
-You tried to load the module twice in the same program.
-Getopt::Euclid doesn't work that way. Load it only once.
-
-=item Unknown mode ('%s')
-
-The only argument that a C<use Getopt::Euclid> command accepts is
-C<':minimal_keys'> (see L<Minimalist keys>). You specified something
-else instead (or possibly forgot to put a semicolon after C<use
-Getopt::Euclid>).
-
-=item Internal error: minimalist mode caused arguments '%s' and '%s' to clash
-
-Minimalist mode removes certain characters from the keys hat are
-returned in C<%ARGV>. This can mean that two command-line options (such
-as C<--step> and C<< <step> >>) map to the same key (i.e. C<'step'>).
-This in turn means that one of the two options has overwritten the other
-within the C<%ARGV> hash. The program developer should either turn off
-C<':minimal_keys'> mode within the program, or else change the name of
-one of the options so that the two no longer clash.
-
-=back
-
-=head2 Run-time diagnostics
-
-The following diagnostics are caused by problems in parsing the command-line
-
-=over
-
-=item Missing required argument(s): %s
-
-At least one argument specified in the C<REQUIRED ARGUMENTS> POD section
-wasn't present on the command-line.
-
-=item Invalid %s argument. %s must be %s but the supplied value (%s) isn't.
-
-Getopt::Euclid recognized the argument you were trying to specify on the
-command-line, but the value you gave to one of that argument's placeholders
-was of the wrong type.
-
-=item Unknown argument: %s
-
-Getopt::Euclid didn't recognize an argument you were trying to specify on the
-command-line. This is often caused by command-line typos or an incomplete
-interface specification.
-
-=back
-
-=head1 CONFIGURATION AND ENVIRONMENT
-
-Getopt::Euclid requires no configuration files or environment variables.
-
 =head1 INTERFACE
 
 =head2 Program Interface
@@ -1868,6 +1722,152 @@ specifier:
 Note that, in rare cases, using this mode may cause you to lose
 data (for example, if the interface specifies both a C<--step> and
 a C<< <step> >> option). The module throws an exception if this happens.
+
+=head1 DIAGNOSTICS
+
+=head2 Compile-time diagnostics
+
+The following diagnostics are mainly caused by problems in the POD
+specification of the command-line interface:
+
+=over
+
+=item Getopt::Euclid was unable to access POD
+
+Something is horribly wrong. Getopt::Euclid was unable to read your
+program to extract the POD from it. Check your program's permissions,
+though it's a mystery how I<perl> was able to run the program in the
+first place, if it's not readable.
+
+=item .pm file cannot define an explicit import() when using Getopt::Euclid
+
+You tried to define an C<import()> subroutine in a module that was also
+using Getopt::Euclid. Since the whole point of using Getopt::Euclid in a
+module is to have it build an C<import()> for you, supplying your own
+C<import()> as well defeats the purpose.
+
+=item Unknown specification: %s
+
+You specified something in a C<=for Euclid> section that
+Getopt::Euclid didn't understand. This is often caused by typos, or by
+reversing a I<placeholder>.I<type> or I<placeholder>.I<default>
+specification (that is, writing I<type>.I<placeholder> or
+I<default>.I<placeholder> instead).
+
+=item Unknown type (%s) in specification: %s
+
+=item Unknown .type constraint: %s
+
+Both these errors mean that you specified a type constraint that
+Getopt::Euclid didn't recognize. This may have been a typo:
+
+    =for Euclid
+        count.type: inetger
+
+or else the module simply doesn't know about the type you specified:
+
+    =for Euclid
+        count.type: complex
+
+See L<Standard placeholder types> for a list of types that Getopt::Euclid
+I<does> recognize.
+
+=item Invalid .type constraint: %s
+
+You specified a type constraint that isn't valid Perl. For example:
+
+    =for Euclid
+        max.type: integer not equals 0
+
+instead of:
+
+    =for Euclid
+        max.type: integer != 0
+
+=item Invalid .default value: %s
+
+You specified a default value that isn't valid Perl. For example:
+
+    =for Euclid
+        curse.default: *$@!&
+
+instead of:
+
+    =for Euclid
+        curse.default: '*$@!&'
+
+=item Invalid constraint: %s (No <%s> placeholder in argument: %s)
+
+You attempted to define a C<.type> constraint for a placeholder that
+didn't exist. Typically this is the result of the misspelling of a
+placeholder name:
+
+    =item -foo <bar>
+
+    =for Euclid:
+        baz.type: integer
+
+or a C<=for Euclid:> that has drifted away from its argument:
+
+    =item -foo <bar>
+
+    =item -verbose
+
+    =for Euclid:
+        bar.type: integer
+
+=item Getopt::Euclid loaded a second time
+
+You tried to load the module twice in the same program.
+Getopt::Euclid doesn't work that way. Load it only once.
+
+=item Unknown mode ('%s')
+
+The only argument that a C<use Getopt::Euclid> command accepts is
+C<':minimal_keys'> (see L<Minimalist keys>). You specified something
+else instead (or possibly forgot to put a semicolon after C<use
+Getopt::Euclid>).
+
+=item Internal error: minimalist mode caused arguments '%s' and '%s' to clash
+
+Minimalist mode removes certain characters from the keys hat are
+returned in C<%ARGV>. This can mean that two command-line options (such
+as C<--step> and C<< <step> >>) map to the same key (i.e. C<'step'>).
+This in turn means that one of the two options has overwritten the other
+within the C<%ARGV> hash. The program developer should either turn off
+C<':minimal_keys'> mode within the program, or else change the name of
+one of the options so that the two no longer clash.
+
+=back
+
+=head2 Run-time diagnostics
+
+The following diagnostics are caused by problems in parsing the command-line
+
+=over
+
+=item Missing required argument(s): %s
+
+At least one argument specified in the C<REQUIRED ARGUMENTS> POD section
+wasn't present on the command-line.
+
+=item Invalid %s argument. %s must be %s but the supplied value (%s) isn't.
+
+Getopt::Euclid recognized the argument you were trying to specify on the
+command-line, but the value you gave to one of that argument's placeholders
+was of the wrong type.
+
+=item Unknown argument: %s
+
+Getopt::Euclid didn't recognize an argument you were trying to specify on the
+command-line. This is often caused by command-line typos or an incomplete
+interface specification.
+
+=back
+
+=head1 CONFIGURATION AND ENVIRONMENT
+
+Getopt::Euclid requires no configuration files or environment variables.
 
 =head1 SUPPORT
 
