@@ -1,0 +1,35 @@
+---
+abstract: 'Executable Uniform Command-Line Interface Descriptions'
+author:
+  - 'Damian Conway <DCONWAY@cpan.org>'
+  - 'Kevin Galinsky <kgalinsky+cpan#gmail.com>'
+  - 'Mark Gardner <mjgardner@cpan.org>'
+build_requires:
+  English: 0
+  File::Find: 0
+  File::Temp: 0
+  Scalar::Util: 0
+  Test::More: 0.94
+configure_requires:
+  ExtUtils::MakeMaker: 6.30
+dynamic_config: 0
+generated_by: 'Dist::Zilla version 4.200006, CPAN::Meta::Converter version 2.110930'
+license: perl
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: Getopt-Proclus
+requires:
+  Carp: 0
+  File::Spec::Functions: 0
+  IO::Page: 0
+  IO::Pager::Page: 0
+  List::Util: 0
+  Pod::Text: 0
+  perl: 5.008
+  re: 0
+  utf8: 0
+resources:
+  bugtracker: https://github.com/mjgardner/getopt-proclus/issues
+  repository: git://github.com/mjgardner/getopt-proclus.git
+version: 0.2.4

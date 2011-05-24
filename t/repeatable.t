@@ -7,20 +7,14 @@ BEGIN {
     $TIMEOUT = 7;
 
     @ARGV = (
-        "-i   $INFILE",
-        "-out=", $OUTFILE,
-        "-lgth $LEN",
-        "-lgth " . (1+$LEN),
-        "-lgth " . $LEN*2,
-        "size ${H}x${W}",
-        '-v',
-        '-v',
-        '-v',
-        '-v',
-        '-v',
-        "--timeout $TIMEOUT",
-        '-w', 's p a c e s',
-        7,
+        "-i   $INFILE", "-out=",
+        $OUTFILE,       "-lgth $LEN",
+        "-lgth " . ( 1 + $LEN ), "-lgth " . $LEN * 2,
+        "size ${H}x${W}",     '-v',
+        '-v',                 '-v',
+        '-v',                 '-v',
+        "--timeout $TIMEOUT", '-w',
+        's p a c e s',        7,
     );
 
     chmod 0644, $0;
@@ -30,41 +24,42 @@ use Getopt::Euclid;
 use Test::More 'no_plan';
 
 sub got_arg {
-    my ($key, $val) = @_;
+    my ( $key, $val ) = @_;
     is $ARGV{$key}, $val, "Got expected value for $key";
 }
 
 is keys %ARGV, 17 => 'Right number of args returned';
 
-got_arg -i       => $INFILE;
-got_arg -infile  => $INFILE;
+got_arg -i      => $INFILE;
+got_arg -infile => $INFILE;
 
-is_deeply $ARGV{-l},      [42,43,84],   => 'Repeated length';
-is_deeply $ARGV{-len},    [42,43,84],   => 'Repeated length';
-is_deeply $ARGV{-length}, [42,43,84],   => 'Repeated length';
-is_deeply $ARGV{-lgth},   [42,43,84],   => 'Repeated length';
+is_deeply $ARGV{-l},      [ 42, 43, 84 ], => 'Repeated length';
+is_deeply $ARGV{-len},    [ 42, 43, 84 ], => 'Repeated length';
+is_deeply $ARGV{-length}, [ 42, 43, 84 ], => 'Repeated length';
+is_deeply $ARGV{-lgth},   [ 42, 43, 84 ], => 'Repeated length';
 
-got_arg -girth   => 42;
+got_arg -girth => 42;
 
 got_arg -o       => $OUTFILE;
 got_arg -ofile   => $OUTFILE;
 got_arg -out     => $OUTFILE;
 got_arg -outfile => $OUTFILE;
 
-is_deeply $ARGV{-v}, [1,1,1,1,1],         => 'Repeated verbosity';
-is_deeply $ARGV{-verbose}, [1,1,1,1,1],   => 'Repeated verbose verbosity';
+is_deeply $ARGV{-v},       [ 1, 1, 1, 1, 1 ], => 'Repeated verbosity';
+is_deeply $ARGV{-verbose}, [ 1, 1, 1, 1, 1 ], => 'Repeated verbose verbosity';
 
-is ref $ARGV{'--timeout'}, 'HASH'     => 'Hash reference returned for timeout';
-is $ARGV{'--timeout'}{min}, $TIMEOUT  => 'Got expected value for timeout <min>';
-is $ARGV{'--timeout'}{max}, -1        => 'Got default value for timeout <max>';
+is ref $ARGV{'--timeout'}, 'HASH' => 'Hash reference returned for timeout';
+is $ARGV{'--timeout'}{min},
+    $TIMEOUT => 'Got expected value for timeout <min>';
+is $ARGV{'--timeout'}{max}, -1 => 'Got default value for timeout <max>';
 
-is ref $ARGV{size}, 'HASH'      => 'Hash reference returned for size';
-is $ARGV{size}{h}, $H           => 'Got expected value for size <h>';
-is $ARGV{size}{w}, $W           => 'Got expected value for size <w>';
+is ref $ARGV{size}, 'HASH' => 'Hash reference returned for size';
+is $ARGV{size}{h}, $H => 'Got expected value for size <h>';
+is $ARGV{size}{w}, $W => 'Got expected value for size <w>';
 
-is $ARGV{-w}, 's p a c e s'      => 'Handled spaces correctly';
+is $ARGV{-w}, 's p a c e s' => 'Handled spaces correctly';
 
-is $ARGV{'<step>'}, 7      => 'Handled step size correctly';
+is $ARGV{'<step>'}, 7 => 'Handled step size correctly';
 
 __END__
 

@@ -16,20 +16,16 @@ BEGIN {
     $TIMEOUT = 7;
 
     @ARGV = (
-        '-b',
-        "-out=", $OUTFILE,
-        "size ${H}x${W}",
-        "-i   $INFILE",
-        "-lgth $LEN",
-        "--timeout $TIMEOUT",
+        '-b', "-out=", $OUTFILE, "size ${H}x${W}",
+        "-i   $INFILE", "-lgth $LEN", "--timeout $TIMEOUT",
     );
 }
 
-if (eval { require Getopt::Euclid and Getopt::Euclid->import(); 1 }) {
+if ( eval { require Getopt::Euclid and Getopt::Euclid->import(); 1 } ) {
     ok 0 => 'Unexpectedly succeeded';
 }
 else {
-    like $@, qr/Unknown argument: -b/ => 'Failed as expected'; 
+    like $@, qr/Unknown argument: -b/ => 'Failed as expected';
 }
 
 __END__

@@ -1,0 +1,60 @@
+{
+   "abstract" : "Executable Uniform Command-Line Interface Descriptions",
+   "author" : [
+      "Damian Conway <DCONWAY@cpan.org>",
+      "Kevin Galinsky <kgalinsky+cpan#gmail.com>",
+      "Mark Gardner <mjgardner@cpan.org>"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "Dist::Zilla version 4.200006, CPAN::Meta::Converter version 2.110930",
+   "license" : [
+      "perl_5"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "Getopt-Proclus",
+   "prereqs" : {
+      "configure" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "6.30"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Carp" : 0,
+            "File::Spec::Functions" : 0,
+            "IO::Page" : 0,
+            "IO::Pager::Page" : 0,
+            "List::Util" : 0,
+            "Pod::Text" : 0,
+            "perl" : "5.008",
+            "re" : 0,
+            "utf8" : 0
+         }
+      },
+      "test" : {
+         "requires" : {
+            "English" : 0,
+            "File::Find" : 0,
+            "File::Temp" : 0,
+            "Scalar::Util" : 0,
+            "Test::More" : "0.94"
+         }
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/mjgardner/getopt-proclus/issues"
+      },
+      "repository" : {
+         "type" : "git",
+         "url" : "git://github.com/mjgardner/getopt-proclus.git",
+         "web" : "https://github.com/mjgardner/getopt-proclus"
+      }
+   },
+   "version" : "0.2.4"
+}
+

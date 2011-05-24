@@ -1,9 +1,24 @@
+#
+# This file is part of Getopt-Proclus
+#
+# This software is copyright (c) 2011 by Damian Conway.
+#
+# This is free software; you can redistribute it and/or modify it under
+# the same terms as the Perl 5 programming language system itself.
+#
+use 5.008;
+use strict;
+use warnings;
+use utf8;
+
 package Getopt::Euclid;
 
-use version; $VERSION = qv('0.2.3');
+BEGIN {
+    $Getopt::Euclid::VERSION = '0.2.4';
+}
 
-use warnings;
-use strict;
+# ABSTRACT: Executable Uniform Command-Line Interface Descriptions
+
 use Carp;
 use File::Spec::Functions qw(splitpath);
 use List::Util qw( first );
@@ -30,11 +45,11 @@ _make_equivalent(
 );
 
 my %STD_CONSTRAINT_FOR = (
-    'string'    => sub { 1 },            # Always okay (matcher ensures this)
-    'integer'   => sub { 1 },            # Always okay (matcher ensures this)
+    'string'    => sub {1},              # Always okay (matcher ensures this)
+    'integer'   => sub {1},              # Always okay (matcher ensures this)
     '+integer'  => sub { $_[0] > 0 },
     '0+integer' => sub { $_[0] >= 0 },
-    'number'    => sub { 1 },            # Always okay (matcher ensures this)
+    'number'    => sub {1},              # Always okay (matcher ensures this)
     '+number'   => sub { $_[0] > 0 },
     '0+number'  => sub { $_[0] >= 0 },
     'input' => sub { $_[0] eq '-' || -r $_[0] },
@@ -90,7 +105,7 @@ my @std_POD;
 sub Getopt::Euclid::Importer::DESTROY {
     return if $has_run || $^C;    # No errors when only compiling
     croak
-      '.pm file cannot define an explicit import() when using Getopt::Euclid';
+        '.pm file cannot define an explicit import() when using Getopt::Euclid';
 }
 
 # Central variable to store script version for ticket #55259
@@ -101,7 +116,8 @@ sub import {
     my $minimal_keys;
     my $vars_prefix;
     @_ = grep { !( /:minimal_keys/ and $minimal_keys = 1 ) } @_;
-    @_ = grep { !( /:vars(?:<(\w+)>)?/ and $vars_prefix = $1 || "ARGV_" ) } @_;
+    @_ = grep { !( /:vars(?:<(\w+)>)?/ and $vars_prefix = $1 || "ARGV_" ) }
+        @_;
     croak "Unknown mode ('$_')" for @_;
 
     if ($has_run) {
@@ -116,19 +132,20 @@ sub import {
 
         # Save module's POD...
         open my $fh, '<', $caller[1]
-          or croak "Getopt::Euclid was unable to access POD\n($!)\nProblem was";
+            or croak
+            "Getopt::Euclid was unable to access POD\n($!)\nProblem was";
         push @std_POD, do { local $/; <$fh> };
 
         # Install this import() sub as module's import sub...
         no strict 'refs';
         croak
-'.pm file cannot define an explicit import() when using Getopt::Euclid'
-          if *{"$caller[0]::import"}{CODE};
+            '.pm file cannot define an explicit import() when using Getopt::Euclid'
+            if *{"$caller[0]::import"}{CODE};
 
         my $lambda;    # Needed so the anon sub is generated at run-time
         *{"$caller[0]::import"}
-          = bless sub { $lambda = 1; goto &Getopt::Euclid::import },
-          'Getopt::Euclid::Importer';
+            = bless sub { $lambda = 1; goto &Getopt::Euclid::import },
+            'Getopt::Euclid::Importer';
 
         return;
     }
@@ -137,7 +154,7 @@ sub import {
 
     # Acquire POD source...
     open my $fh, '<', $0
-      or croak "Getopt::Euclid was unable to access POD\n($!)\nProblem was";
+        or croak "Getopt::Euclid was unable to access POD\n($!)\nProblem was";
     my $source = do { local $/; <$fh> };
 
     # Clean up line delimeters
@@ -181,38 +198,40 @@ sub import {
     my ($prog_name) = ( splitpath($0) )[-1];
 
     # Extract version info
-    ($SCRIPT_VERSION) =
-      $pod =~ m/^=head1 $VERS .*? (\d+(?:[._]\d+)+) .*? $EOHEAD /xms;
+    ($SCRIPT_VERSION)
+        = $pod =~ m/^=head1 $VERS .*? (\d+(?:[._]\d+)+) .*? $EOHEAD /xms;
     if ( !defined $SCRIPT_VERSION ) {
         $SCRIPT_VERSION = $main::VERSION;
     }
 
-    my ( $opt_name, $options ) =
-      $pod =~ m/^=head1 ($OPTIONS)  (.*?) $EOHEAD /xms;
+    my ( $opt_name, $options )
+        = $pod =~ m/^=head1 ($OPTIONS)  (.*?) $EOHEAD /xms;
 
-    my ( $req_name, $required ) =
-      $pod =~ m/^=head1 ($REQUIRED) (.*?) $EOHEAD /xms;
+    my ( $req_name, $required )
+        = $pod =~ m/^=head1 ($REQUIRED) (.*?) $EOHEAD /xms;
 
-    my ($licence) = $pod =~
-m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms;
+    my ($licence)
+        = $pod
+        =~ m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms;
 
     # Extra info from higher-level pod...
     for my $std_POD ( reverse @std_POD ) {
-        my ( undef, $more_options ) =
-          $std_POD =~ m/^=head1 ($OPTIONS)  (.*?) $EOHEAD /xms;
+        my ( undef, $more_options )
+            = $std_POD =~ m/^=head1 ($OPTIONS)  (.*?) $EOHEAD /xms;
         $options = ( $more_options || q{} ) . ( $options || q{} );
 
-        my ( undef, $more_required ) =
-          $std_POD =~ m/^=head1 ($REQUIRED) (.*?) $EOHEAD /xms;
+        my ( undef, $more_required )
+            = $std_POD =~ m/^=head1 ($REQUIRED) (.*?) $EOHEAD /xms;
         $required = ( $more_required || q{} ) . ( $required || q{} );
 
-        my ($more_licence) = $std_POD =~
-m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms;
+        my ($more_licence)
+            = $std_POD
+            =~ m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms;
         $licence = ( $more_licence || q{} ) . ( $licence || q{} );
     }
 
     # Clean up interface titles...
-  NAME:
+NAME:
     for my $name ( $opt_name, $req_name ) {
         next NAME if !defined $name;
         $name =~ s{\A \s+ | \s+ \z}{}gxms;
@@ -239,8 +258,8 @@ m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms
         if ($minimal_keys) {
             my $minimal = _minimize_name($name);
             croak "Internal error: minimalist mode caused arguments",
-              "'$name' and '$seen{$minimal}' to clash"
-              if $seen{$minimal};
+                "'$name' and '$seen{$minimal}' to clash"
+                if $seen{$minimal};
             $seen{$minimal} = $name;
         }
         $long_names{ _longestname(@variants) } = $name;
@@ -257,8 +276,8 @@ m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms
         if ($minimal_keys) {
             my $minimal = _minimize_name($name);
             croak "Internal error: minimalist mode caused arguments",
-              "'$name' and '$seen{$minimal}' to clash"
-              if $seen{$minimal};
+                "'$name' and '$seen{$minimal}' to clash"
+                if $seen{$minimal};
             $seen{$minimal} = $name;
         }
         $long_names{ _longestname(@variants) } = $name;
@@ -266,10 +285,10 @@ m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms
     _minimize_entries_of( \%long_names );
 
     # Extract Euclid information...
-  ARG:
+ARG:
     for my $arg ( values(%requireds), values(%options) ) {
         $arg->{src} =~ s{^ =for \s+ Euclid\b [^\n]* \s* (.*) \z}{}ixms
-          or next ARG;
+            or next ARG;
         my $info = $1;
 
         $arg->{is_repeatable} = $info =~ s{^ \s* repeatable \s*? $}{}xms;
@@ -285,15 +304,15 @@ m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms
             $arg->{false_vals} = '(?:' . join( '|', @false_vals ) . ')';
         }
 
-        while (
-            $info =~ m{\G \s* (([^.]+)\.([^:=\s]+) \s*[:=]\s* ([^\n]*)) }gcxms )
+        while ( $info
+            =~ m{\G \s* (([^.]+)\.([^:=\s]+) \s*[:=]\s* ([^\n]*)) }gcxms )
         {
             my ( $spec, $var, $field, $val ) = ( $1, $2, $3, $4 );
 
             # Check for misplaced fields...
             if ( $arg->{name} !~ m{\Q<$var>}xms ) {
                 _fail(
-"Invalid constraint: $spec\n(No <$var> placeholder in argument: $arg->{name})"
+                    "Invalid constraint: $spec\n(No <$var> placeholder in argument: $arg->{name})"
                 );
             }
 
@@ -302,35 +321,35 @@ m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms
                 $arg->{var}{$var}{type_error} = $val;
             }
             elsif ( $field eq 'type' ) {
-                my ( $matchtype, $comma, $constraint ) =
-                  $val =~ m{(/(?:\.|.)+/ | [^,\s]+)\s*(?:(,))?\s*(.*)}xms;
+                my ( $matchtype, $comma, $constraint )
+                    = $val =~ m{(/(?:\.|.)+/ | [^,\s]+)\s*(?:(,))?\s*(.*)}xms;
                 $arg->{var}{$var}{type} = $matchtype;
 
                 if ( $comma && length $constraint ) {
-                    ( $arg->{var}{$var}{constraint_desc} = $constraint ) =~
-                      s/\s*\b\Q$var\E\b\s*//g;
+                    ( $arg->{var}{$var}{constraint_desc} = $constraint )
+                        =~ s/\s*\b\Q$var\E\b\s*//g;
                     $constraint =~ s/\b\Q$var\E\b/\$_[0]/g;
                     $arg->{var}{$var}{constraint} = eval "sub{ $constraint }"
-                      or _fail("Invalid .type constraint: $spec\n($@)");
+                        or _fail("Invalid .type constraint: $spec\n($@)");
                 }
                 elsif ( length $constraint ) {
                     $arg->{var}{$var}{constraint_desc} = $constraint;
-                    $arg->{var}{$var}{constraint} =
-                      eval "sub{ \$_[0] $constraint }"
-                      or _fail("Invalid .type constraint: $spec\n($@)");
+                    $arg->{var}{$var}{constraint}
+                        = eval "sub{ \$_[0] $constraint }"
+                        or _fail("Invalid .type constraint: $spec\n($@)");
                 }
                 else {
                     $arg->{var}{$var}{constraint_desc} = $matchtype;
-                    $arg->{var}{$var}{constraint} =
-                      $matchtype =~ m{\A\s*/.*/\s*\z}xms
-                      ? sub { 1 }
-                      : $STD_CONSTRAINT_FOR{$matchtype}
-                      or _fail("Unknown .type constraint: $spec");
+                    $arg->{var}{$var}{constraint}
+                        = $matchtype =~ m{\A\s*/.*/\s*\z}xms
+                        ? sub {1}
+                        : $STD_CONSTRAINT_FOR{$matchtype}
+                        or _fail("Unknown .type constraint: $spec");
                 }
             }
             elsif ( $field eq 'default' ) {
                 eval "\$val = $val; 1"
-                  or _fail("Invalid .default value: $spec\n($@)");
+                    or _fail("Invalid .default value: $spec\n($@)");
                 $arg->{var}{$var}{default} = $val;
                 $arg->{has_defaults} = 1;
             }
@@ -345,8 +364,8 @@ m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms
 
     # Build one-line representation of interface...
     my $arg_summary = join ' ',
-      sort { $requireds{$a}{seq} <=> $requireds{$b}{seq} }
-      keys %requireds;
+        sort { $requireds{$a}{seq} <=> $requireds{$b}{seq} }
+        keys %requireds;
     1 while $arg_summary =~ s/\[ [^][]* \]//gxms;
     $arg_summary .= lc " [$opt_name]" if $opt_name;
     $arg_summary =~ s/\s+/ /gxms;
@@ -361,19 +380,20 @@ m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms
             {$1 This document refers to $prog_name version $SCRIPT_VERSION $2}xms;
 
     # Handle standard args...
-    if ( grep { / --man /xms } @ARGV ) {
+    if ( grep {/ --man /xms} @ARGV ) {
         _print_and_exit( $pod, 'paged' );
     }
     elsif ( first { $_ eq '--usage' } @ARGV ) {
-        print "Usage: $prog_name $arg_summary\n", "       $prog_name --help\n";
+        print "Usage: $prog_name $arg_summary\n",
+            "       $prog_name --help\n";
         exit;
     }
     elsif ( first { $_ eq '--help' } @ARGV ) {
         my $pod = "=head1 Usage:\n\n$prog_name $arg_summary\n\n";
         $pod .= "=head1 \L\u$req_name:\E\E\n\n$required\n\n"
-          if ( $required || q{} ) =~ /\S/;
+            if ( $required || q{} ) =~ /\S/;
         $pod .= "=head1 \L\u$opt_name:\E\E\n\n$options\n\n"
-          if ( $options || q{} ) =~ /\S/;
+            if ( $options || q{} ) =~ /\S/;
         _print_and_exit($pod);
     }
     elsif ( first { $_ eq '--version' } @ARGV ) {
@@ -393,10 +413,10 @@ m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms
 
     my @arg_list = ( values(%requireds), values(%options) );
     my $matcher = join '|', map { $_->{matcher} }
-      sort( { $b->{name} cmp $a->{name} } grep { $_->{name} =~ /^[^<]/ }
-          @arg_list ),
-      sort( { $a->{seq} <=> $b->{seq} } grep { $_->{name} =~ /^[<]/ }
-          @arg_list );
+        sort( { $b->{name} cmp $a->{name} } grep { $_->{name} =~ /^[^<]/ }
+            @arg_list ),
+        sort( { $a->{seq} <=> $b->{seq} } grep { $_->{name} =~ /^[<]/ }
+            @arg_list );
 
     $matcher .= '|(?> (.+)) (?{ push @errors, $^N }) (?!)';
 
@@ -415,8 +435,8 @@ m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms
     # Run matcher...
     my $all_args_ref = { %options, %requireds };
 
-    my $argv =
-      join( q{ }, map { my $arg = $_; $arg =~ tr/ \t/\0\1/; $arg } @ARGV );
+    my $argv = join( q{ },
+        map { my $arg = $_; $arg =~ tr/ \t/\0\1/; $arg } @ARGV );
     if ( my $error = _doesnt_match( $matcher, $argv, $all_args_ref ) ) {
         _bad_arglist($error);
     }
@@ -426,7 +446,7 @@ m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms
     my @missing;
     for my $req ( keys %requireds ) {
         push @missing, "\t$req\n"
-          if !exists $ARGV{$req};
+            if !exists $ARGV{$req};
     }
     _bad_arglist(
         'Missing required argument',
@@ -461,11 +481,11 @@ m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms
         for my $val ( @{$vals} ) {
             my $var_count = keys %{$val};
             $val = $var_count == 0
-              ? 1    # Boolean -> true
-              : $var_count == 1
-              ? ( values %{$val} )[0]    # Single var -> var's val
-              : $val                     # Otherwise keep hash
-              ;
+                ? 1    # Boolean -> true
+                : $var_count == 1
+                ? ( values %{$val} )[0]    # Single var -> var's val
+                : $val                     # Otherwise keep hash
+                ;
             my $false_vals = $all_args_ref->{$arg_name}{false_vals};
             my @variants   = _get_variants($arg_name);
             my %vars_opt_vals;
@@ -488,7 +508,8 @@ m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms
             if ($vars_prefix) {
                 _minimize_entries_of( \%vars_opt_vals );
                 my $maximal = _longestname( keys %vars_opt_vals );
-                _export_var( $vars_prefix, $maximal, $vars_opt_vals{$maximal} );
+                _export_var( $vars_prefix, $maximal,
+                    $vars_opt_vals{$maximal} );
                 delete $long_names{$maximal};
             }
         }
@@ -502,8 +523,8 @@ m/^=head1 [^\n]+ (?i: licen[sc]e | copyright ) .*? \n \s* (.*?) \s* $EOHEAD /xms
             my $arg_info = $all_args_ref->{$arg_name};
             my $val;
             $val = []
-              if $arg_info->{is_repeatable}
-                  or $arg_name =~ />\.\.\./;
+                if $arg_info->{is_repeatable}
+                    or $arg_name =~ />\.\.\./;
             $val = {} if keys %{ $arg_info->{var} } > 1;
             _export_var( $vars_prefix, $opt_name, $val );
         }
@@ -563,13 +584,14 @@ sub _doesnt_match {
             $argv =~ s{\Q$bundle\E}{$marker$firstchar $marker$chars}xms;
             return if !_doesnt_match( $matcher, $argv, $arg_specs_ref );
         }
-      ARG:
+    ARG:
         for my $arg_spec_ref ( values %{$arg_specs_ref} ) {
             our $bad_type;
             local $bad_type;
             next ARG
-              if $error !~ m/\A [\s\0\1]* ($arg_spec_ref->{generic_matcher})/xms
-                  || !$bad_type;
+                if $error
+                    !~ m/\A [\s\0\1]* ($arg_spec_ref->{generic_matcher})/xms
+                    || !$bad_type;
 
             my $msg;
             if ( $msg = $bad_type->{type_error} ) {
@@ -579,7 +601,7 @@ sub _doesnt_match {
             }
             else {
                 $msg = qq{$bad_type->{var} must be $bad_type->{type}}
-                  . qq{ but the supplied value ("$bad_type->{val}") isn't.};
+                    . qq{ but the supplied value ("$bad_type->{val}") isn't.};
             }
             return qq{Invalid "$bad_type->{arg}" argument\n$msg};
         }
@@ -617,13 +639,13 @@ sub _rectify_args {
 sub _verify_args {
     my ($arg_specs_ref) = @_;
 
-  ARG:
+ARG:
     for my $arg_name ( keys %{$arg_specs_ref} ) {
 
         # Skip non-existent/non-defaulting arguments
         next ARG
-          if !exists $ARGV{$arg_name}
-              && !$arg_specs_ref->{$arg_name}{has_defaults};
+            if !exists $ARGV{$arg_name}
+                && !$arg_specs_ref->{$arg_name}{has_defaults};
 
         # Ensure all vars exist within arg...
         my @vars = @{ $arg_specs_ref->{$arg_name}{placeholders} || [] };
@@ -635,7 +657,7 @@ sub _verify_args {
             # Get arg specs...
             my $arg_vars = $arg_specs_ref->{$arg_name}{var};
 
-          VAR:
+        VAR:
             for my $var (@vars) {
 
                 # Check constraints on vars...
@@ -647,16 +669,16 @@ sub _verify_args {
                             ref $entry->{$var} eq 'ARRAY'
                             ? @{ $entry->{$var} }
                             : $entry->{$var}
-                          )
+                            )
                         {
                             _bad_arglist(
                                 qq{Invalid "$arg_name" argument.\n},
                                 qq{<$var> must be },
                                 $arg_vars->{$var}{constraint_desc},
                                 qq{ but the supplied value ("$val") isn't.}
-                              )
-                              if $arg_vars->{$var}{constraint}
-                                  && !$arg_vars->{$var}{constraint}->($val);
+                                )
+                                if $arg_vars->{$var}{constraint}
+                                    && !$arg_vars->{$var}{constraint}->($val);
                         }
                         next VAR;
                     }
@@ -667,18 +689,18 @@ sub _verify_args {
                             ref $entry eq 'ARRAY'
                             ? @{$entry}
                             : $entry
-                          )
+                            )
                         {
                             _bad_arglist(
                                 qq{Invalid "$arg_name" argument.\n},
                                 qq{<$var> must be },
                                 $arg_vars->{$var}{constraint_desc},
                                 qq{ but the supplied value ("$val") isn't.}
-                              )
-                              if $arg_vars->{$var}{constraint}
-                                  && !$arg_vars->{$var}{constraint}->($val);
+                                )
+                                if $arg_vars->{$var}{constraint}
+                                    && !$arg_vars->{$var}{constraint}->($val);
                             $entry->{$var} = ''
-                              unless defined( $ARGV{$arg_name} );
+                                unless defined( $ARGV{$arg_name} );
                         }
                         next VAR;
                     }
@@ -686,10 +708,12 @@ sub _verify_args {
 
                 # Assign placeholder defaults (if necessary)...
                 next ARG
-                  if !exists $arg_specs_ref->{$arg_name}{var}{$var}{default};
+                    if !
+                        exists $arg_specs_ref->{$arg_name}{var}{$var}
+                        {default};
 
-                $entry->{$var} =
-                  $arg_specs_ref->{$arg_name}{var}{$var}{default};
+                $entry->{$var}
+                    = $arg_specs_ref->{$arg_name}{var}{$var}{default};
             }
         }
 
@@ -699,10 +723,12 @@ sub _verify_args {
 
                 # Assign defaults (if necessary)...
                 next ARG
-                  if !exists $arg_specs_ref->{$arg_name}{var}{$var}{default};
+                    if !
+                        exists $arg_specs_ref->{$arg_name}{var}{$var}
+                        {default};
 
-                $ARGV{$arg_name}[0]{$var} =
-                  $arg_specs_ref->{$arg_name}{var}{$var}{default};
+                $ARGV{$arg_name}[0]{$var}
+                    = $arg_specs_ref->{$arg_name}{var}{$var}{default};
             }
         }
     }
@@ -738,21 +764,21 @@ sub _convert_to_regex {
                      :
                      "(?:($matcher)(?{(\$ARGV{q{$arg_name}}||=[{}])->[-1]{q{$var_name}} = \$^N}))"
                    }gexms
-          or do {
+            or do {
             $regex .= "(?{(\$ARGV{q{$arg_name}}||=[{}])->[-1]{q{}} = 1})";
-          };
+            };
 
         if ( $arg->{is_repeatable} ) {
-            $arg->{matcher} =
-"$regex (?:(?<!\\w)|(?!\\w)) (?{push \@{\$ARGV{q{$arg_name}}}, {} })";
+            $arg->{matcher}
+                = "$regex (?:(?<!\\w)|(?!\\w)) (?{push \@{\$ARGV{q{$arg_name}}}, {} })";
         }
         else {
             $arg->{matcher} = "(??{exists\$ARGV{q{$arg_name}}?'(?!)':''}) "
-              . (
+                . (
                 $arg->{false_vals}
                 ? "(?:$arg->{false_vals} (?:(?<!\\w)|(?!\\w)) (?{\$ARGV{q{$arg_name}} ||= [{ q{} => 0 }] }) | $regex (?:(?<!\\w)|(?!\\w)) (?{\$ARGV{q{$arg_name}} ||= [{ q{} => 1}] }))"
                 : "$regex (?:(?<!\\w)|(?!\\w)) (?{\$ARGV{q{$arg_name}} ||= [{}] })"
-              );
+                );
         }
 
         $generic =~ s{ < (.*?) > }
@@ -841,7 +867,15 @@ sub _export_var {
     *{"$callpkg\::$export_as"} = ( ref $value ) ? $value : \$value;
 }
 
-1;                                 # Magic true value required at end of module
+1;    # Magic true value required at end of module
+
+__END__
+
+=pod
+
+=for :stopwords Damian Conway Kevin Galinsky <kgalinsky+cpan#gmail.com> Mark Gardner cpan
+testmatrix url annocpan anno bugtracker rt cpants kwalitee diff irc mailto
+metadata placeholders
 
 =head1 NAME
 
@@ -849,7 +883,7 @@ Getopt::Euclid - Executable Uniform Command-Line Interface Descriptions
 
 =head1 VERSION
 
-This document describes Getopt::Euclid version 0.2.3
+version 0.2.4
 
 =head1 SYNOPSIS
 
@@ -883,7 +917,7 @@ This document describes Getopt::Euclid version 0.2.3
 
     =over
 
-    =item  -s[ize]=<h>x<w>    
+    =item  -s[ize]=<h>x<w>
 
     Specify size of simulation
 
@@ -893,7 +927,7 @@ This document describes Getopt::Euclid version 0.2.3
         w.type:    int >= 10
         w.default: 80
 
-    =item  -o[ut][file] <file>    
+    =item  -o[ut][file] <file>
 
     Specify output file
 
@@ -948,8 +982,7 @@ This document describes Getopt::Euclid version 0.2.3
     This module is free software. It may be used, redistributed
     and/or modified under the terms of the Perl Artistic License
     (see http://www.perl.com/perl/misc/Artistic.html)
-  
-  
+
 =head1 DESCRIPTION
 
 Getopt::Euclid uses your program's own documentation to create a command-line
@@ -977,7 +1010,7 @@ locate any POD in the same file,
 
 =item 2.
 
-extract information from that POD, most especially from 
+extract information from that POD, most especially from
 the C<=head1 REQUIRED ARGUMENTS> and C<=head1 OPTIONS> sections,
 
 =item 3.
@@ -1006,7 +1039,153 @@ All of which just means you can put some or all of your CLI specification
 in a module, rather than in the application's source file.
 See L<Module Interface> for more details.
 
-=head1 INTERFACE 
+=head1 DIAGNOSTICS
+
+=head2 Compile-time diagnostics
+
+The following diagnostics are mainly caused by problems in the POD
+specification of the command-line interface:
+
+=over
+
+=item Getopt::Euclid was unable to access POD
+
+Something is horribly wrong. Getopt::Euclid was unable to read your
+program to extract the POD from it. Check your program's permissions,
+though it's a mystery how I<perl> was able to run the program in the
+first place, if it's not readable.
+
+=item .pm file cannot define an explicit import() when using Getopt::Euclid
+
+You tried to define an C<import()> subroutine in a module that was also
+using Getopt::Euclid. Since the whole point of using Getopt::Euclid in a
+module is to have it build an C<import()> for you, supplying your own
+C<import()> as well defeats the purpose.
+
+=item Unknown specification: %s
+
+You specified something in a C<=for Euclid> section that
+Getopt::Euclid didn't understand. This is often caused by typos, or by
+reversing a I<placeholder>.I<type> or I<placeholder>.I<default>
+specification (that is, writing I<type>.I<placeholder> or
+I<default>.I<placeholder> instead).
+
+=item Unknown type (%s) in specification: %s
+
+=item Unknown .type constraint: %s
+
+Both these errors mean that you specified a type constraint that
+Getopt::Euclid didn't recognize. This may have been a typo:
+
+    =for Euclid
+        count.type: inetger
+
+or else the module simply doesn't know about the type you specified:
+
+    =for Euclid
+        count.type: complex
+
+See L<Standard placeholder types> for a list of types that Getopt::Euclid
+I<does> recognize.
+
+=item Invalid .type constraint: %s
+
+You specified a type constraint that isn't valid Perl. For example:
+
+    =for Euclid
+        max.type: integer not equals 0
+
+instead of:
+
+    =for Euclid
+        max.type: integer != 0
+
+=item Invalid .default value: %s
+
+You specified a default value that isn't valid Perl. For example:
+
+    =for Euclid
+        curse.default: *$@!&
+
+instead of:
+
+    =for Euclid
+        curse.default: '*$@!&'
+
+=item Invalid constraint: %s (No <%s> placeholder in argument: %s)
+
+You attempted to define a C<.type> constraint for a placeholder that
+didn't exist. Typically this is the result of the misspelling of a
+placeholder name:
+
+    =item -foo <bar>
+
+    =for Euclid:
+        baz.type: integer
+
+or a C<=for Euclid:> that has drifted away from its argument:
+
+    =item -foo <bar>
+
+    =item -verbose
+
+    =for Euclid:
+        bar.type: integer
+
+=item Getopt::Euclid loaded a second time
+
+You tried to load the module twice in the same program.
+Getopt::Euclid doesn't work that way. Load it only once.
+
+=item Unknown mode ('%s')
+
+The only argument that a C<use Getopt::Euclid> command accepts is
+C<':minimal_keys'> (see L<Minimalist keys>). You specified something
+else instead (or possibly forgot to put a semicolon after C<use
+Getopt::Euclid>).
+
+=item Internal error: minimalist mode caused arguments '%s' and '%s' to clash
+
+Minimalist mode removes certain characters from the keys hat are
+returned in C<%ARGV>. This can mean that two command-line options (such
+as C<--step> and C<< <step> >>) map to the same key (i.e. C<'step'>).
+This in turn means that one of the two options has overwritten the other
+within the C<%ARGV> hash. The program developer should either turn off
+C<':minimal_keys'> mode within the program, or else change the name of
+one of the options so that the two no longer clash.
+
+=back
+
+=head2 Run-time diagnostics
+
+The following diagnostics are caused by problems in parsing the command-line
+
+=over
+
+=item Missing required argument(s): %s
+
+At least one argument specified in the C<REQUIRED ARGUMENTS> POD section
+wasn't present on the command-line.
+
+=item Invalid %s argument. %s must be %s but the supplied value (%s) isn't.
+
+Getopt::Euclid recognized the argument you were trying to specify on the
+command-line, but the value you gave to one of that argument's placeholders
+was of the wrong type.
+
+=item Unknown argument: %s
+
+Getopt::Euclid didn't recognize an argument you were trying to specify on the
+command-line. This is often caused by command-line typos or an incomplete
+interface specification.
+
+=back
+
+=head1 CONFIGURATION AND ENVIRONMENT
+
+Getopt::Euclid requires no configuration files or environment variables.
+
+=head1 INTERFACE
 
 =head2 Program Interface
 
@@ -1073,13 +1252,13 @@ accepts one or more additional trailing .I<< <digit> >> or _I<< <digit> >>,
 allowing for multi-level and "alpha" version numbers such as:
 
     =head1 VERSION
-    
+
     This is version 1.2.3
-    
+
 or:
 
     =head1 VERSION
-    
+
     This is alpha release 1.2_34
 
 You may also specify the version number in your code. However, in order for
@@ -1140,7 +1319,7 @@ format:
 
 =head3 Argument structure
 
-=over 
+=over
 
 =item *
 
@@ -1179,7 +1358,7 @@ For example, the argument specification:
 indicates that any of the following may appear on the command-line:
 
     -idata.txt    -i data.txt    -i=data.txt    -i = data.txt
-                                     
+
     -indata.txt   -in data.txt   -in=data.txt   -in = data.txt
 
     --from data.text
@@ -1191,7 +1370,7 @@ Any of the above variations would cause all three of:
     $ARGV{'-i'}
     $ARGV{'-in'}
     $ARGV{'--from'}
-    
+
 to be set to the string C<'data.txt'>.
 
 You could allow the optional C<=> to also be an optional colon by specifying:
@@ -1244,7 +1423,7 @@ they appear. For example, a common idiom is:
 
 These two arguments are effectively the same argument, just with opposite
 boolean values. However, as specified above, only one of C<$ARGV{'--print'}>
-and C<$ARGV{'--noprint'}> will be set. 
+and C<$ARGV{'--noprint'}> will be set.
 
 As an alternative you can specify a single argument that accepts either value
 and sets both appropriately:
@@ -1462,7 +1641,7 @@ Getopt::Euclid recognizes the following standard placeholder types:
                     (or of a non-existent
                     file in a writeable
                     directory)
-                    
+
     /<regex>/       ...must be a string
                     matching the specified
                     pattern
@@ -1690,208 +1869,118 @@ Note that, in rare cases, using this mode may cause you to lose
 data (for example, if the interface specifies both a C<--step> and
 a C<< <step> >> option). The module throws an exception if this happens.
 
-=head1 DIAGNOSTICS
+=head1 SUPPORT
 
-=head2 Compile-time diagnostics
+=head2 Perldoc
 
-The following diagnostics are mainly caused by problems in the POD
-specification of the command-line interface:
+You can find documentation for this module with the perldoc command.
 
-=over
+  perldoc Getopt::Euclid
 
-=item Getopt::Euclid was unable to access POD
+=head2 Websites
 
-Something is horribly wrong. Getopt::Euclid was unable to read your
-program to extract the POD from it. Check your program's permissions,
-though it's a mystery how I<perl> was able to run the program in the
-first place, if it's not readable.
+The following websites have more information about this module, and may be of help to you. As always,
+in addition to those websites please use your favorite search engine to discover more resources.
 
-=item .pm file cannot define an explicit import() when using Getopt::Euclid
-
-You tried to define an C<import()> subroutine in a module that was also
-using Getopt::Euclid. Since the whole point of using Getopt::Euclid in a
-module is to have it build an C<import()> for you, supplying your own
-C<import()> as well defeats the purpose.
-
-=item Unknown specification: %s
-
-You specified something in a C<=for Euclid> section that
-Getopt::Euclid didn't understand. This is often caused by typos, or by
-reversing a I<placeholder>.I<type> or I<placeholder>.I<default>
-specification (that is, writing I<type>.I<placeholder> or
-I<default>.I<placeholder> instead).
-
-=item Unknown type (%s) in specification: %s
-
-=item Unknown .type constraint: %s
-
-Both these errors mean that you specified a type constraint that
-Getopt::Euclid didn't recognize. This may have been a typo:
-
-    =for Euclid
-        count.type: inetger
-
-or else the module simply doesn't know about the type you specified:
-
-    =for Euclid
-        count.type: complex
-
-See L<Standard placeholder types> for a list of types that Getopt::Euclid
-I<does> recognize.
-
-=item Invalid .type constraint: %s
-
-You specified a type constraint that isn't valid Perl. For example:
-
-    =for Euclid
-        max.type: integer not equals 0
-
-instead of:
-
-    =for Euclid
-        max.type: integer != 0
-
-=item Invalid .default value: %s
-
-You specified a default value that isn't valid Perl. For example:
-
-    =for Euclid
-        curse.default: *$@!&
-
-instead of:
-
-    =for Euclid
-        curse.default: '*$@!&'
-
-=item Invalid constraint: %s (No <%s> placeholder in argument: %s)
-
-You attempted to define a C<.type> constraint for a placeholder that
-didn't exist. Typically this is the result of the misspelling of a
-placeholder name:
-
-    =item -foo <bar>
-
-    =for Euclid:
-        baz.type: integer
-
-or a C<=for Euclid:> that has drifted away from its argument:
-
-    =item -foo <bar>
-
-    =item -verbose
-
-    =for Euclid:
-        bar.type: integer
-
-=item Getopt::Euclid loaded a second time
-
-You tried to load the module twice in the same program.
-Getopt::Euclid doesn't work that way. Load it only once.
-
-=item Unknown mode ('%s')
-
-The only argument that a C<use Getopt::Euclid> command accepts is
-C<':minimal_keys'> (see L<Minimalist keys>). You specified something
-else instead (or possibly forgot to put a semicolon after C<use
-Getopt::Euclid>).
-
-=item Internal error: minimalist mode caused arguments '%s' and '%s' to clash
-
-Minimalist mode removes certain characters from the keys hat are
-returned in C<%ARGV>. This can mean that two command-line options (such
-as C<--step> and C<< <step> >>) map to the same key (i.e. C<'step'>).
-This in turn means that one of the two options has overwritten the other
-within the C<%ARGV> hash. The program developer should either turn off
-C<':minimal_keys'> mode within the program, or else change the name of
-one of the options so that the two no longer clash.
-
-=back
-
-=head2 Run-time diagnostics
-
-The following diagnostics are caused by problems in parsing the command-line
-
-=over 
-
-=item Missing required argument(s): %s
-
-At least one argument specified in the C<REQUIRED ARGUMENTS> POD section
-wasn't present on the command-line.
-
-=item Invalid %s argument. %s must be %s but the supplied value (%s) isn't.
-
-Getopt::Euclid recognized the argument you were trying to specify on the
-command-line, but the value you gave to one of that argument's placeholders
-was of the wrong type.
-
-=item Unknown argument: %s
-
-Getopt::Euclid didn't recognize an argument you were trying to specify on the
-command-line. This is often caused by command-line typos or an incomplete
-interface specification.
-
-=back
-
-=head1 CONFIGURATION AND ENVIRONMENT
-
-Getopt::Euclid requires no configuration files or environment variables.
-
-=head1 DEPENDENCIES
-
-=over 
+=over 4
 
 =item *
 
-File::Spec::Functions
+Search CPAN
+
+The default CPAN search engine, useful to view POD in HTML format.
+
+L<http://search.cpan.org/dist/Getopt-Proclus>
 
 =item *
 
-List::Util
+AnnoCPAN
+
+The AnnoCPAN is a website that allows community annonations of Perl module documentation.
+
+L<http://annocpan.org/dist/Getopt-Proclus>
+
+=item *
+
+CPAN Ratings
+
+The CPAN Ratings is a website that allows community ratings and reviews of Perl modules.
+
+L<http://cpanratings.perl.org/d/Getopt-Proclus>
+
+=item *
+
+CPANTS
+
+The CPANTS is a website that analyzes the Kwalitee ( code metrics ) of a distribution.
+
+L<http://cpants.perl.org/dist/overview/Getopt-Proclus>
+
+=item *
+
+CPAN Testers
+
+The CPAN Testers is a network of smokers who run automated tests on uploaded CPAN distributions.
+
+L<http://www.cpantesters.org/distro/G/Getopt-Proclus>
+
+=item *
+
+CPAN Testers Matrix
+
+The CPAN Testers Matrix is a website that provides a visual way to determine what Perls/platforms PASSed for a distribution.
+
+L<http://matrix.cpantesters.org/?dist=Getopt-Proclus>
+
+=item *
+
+CPAN Testers Dependencies
+
+The CPAN Testers Dependencies is a website that shows a chart of the test results of all dependencies for a distribution.
+
+L<http://deps.cpantesters.org/?module=Getopt::Euclid>
 
 =back
 
-=head1 INCOMPATIBILITIES
+=head2 Bugs / Feature Requests
 
-None reported.
+Please report any bugs or feature requests through the web
+interface at L<https://github.com/mjgardner/getopt-proclus/issues>. You will be automatically notified of any
+progress on the request by the system.
 
-=head1 BUGS AND LIMITATIONS
+=head2 Source Code
 
-Please report any bugs or feature requests to
-C<bug-getopt-euclid@rt.cpan.org>, or through the web interface at
-L<http://rt.cpan.org>.
+The code is open to the world, and available for you to hack on. Please feel free to browse it and play
+with it, or whatever. If you want to contribute patches, please send me a diff or prod me to pull
+from your repository :)
 
-=head1 AUTHOR
+L<https://github.com/mjgardner/getopt-proclus>
 
-Damian Conway  C<< <DCONWAY@cpan.org> >>
+  git clone git://github.com/mjgardner/getopt-proclus.git
 
-Kevin Galinsky C<< <kgalinsky+cpan at gmail.com> >>
+=head1 AUTHORS
 
-=head1 LICENCE AND COPYRIGHT
+=over 4
 
-Copyright (c) 2005, Damian Conway C<< <DCONWAY@cpan.org> >>. All rights reserved.
+=item *
 
-This module is free software; you can redistribute it and/or
-modify it under the same terms as Perl itself.
+Damian Conway <DCONWAY@cpan.org>
 
-=head1 DISCLAIMER OF WARRANTY
+=item *
 
-BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
-FOR THE SOFTWARE, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN
-OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES
-PROVIDE THE SOFTWARE "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER
-EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE
-ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE SOFTWARE IS WITH
-YOU. SHOULD THE SOFTWARE PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL
-NECESSARY SERVICING, REPAIR, OR CORRECTION.
+Kevin Galinsky <kgalinsky+cpan#gmail.com>
 
-IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING
-WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY AND/OR
-REDISTRIBUTE THE SOFTWARE AS PERMITTED BY THE ABOVE LICENCE, BE
-LIABLE TO YOU FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL,
-OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE
-THE SOFTWARE (INCLUDING BUT NOT LIMITED TO LOSS OF DATA OR DATA BEING
-RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD PARTIES OR A
-FAILURE OF THE SOFTWARE TO OPERATE WITH ANY OTHER SOFTWARE), EVEN IF
-SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF
-SUCH DAMAGES.
+=item *
+
+Mark Gardner <mjgardner@cpan.org>
+
+=back
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2011 by Damian Conway.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut

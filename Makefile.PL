@@ -1,19 +1,64 @@
+
 use strict;
 use warnings;
-use ExtUtils::MakeMaker;
 
-WriteMakefile(
-    NAME                => 'Getopt::Euclid',
-    AUTHOR              => 'Damian Conway <DCONWAY@cpan.org>',
-    VERSION_FROM        => 'lib/Getopt/Euclid.pm',
-    ABSTRACT_FROM       => 'lib/Getopt/Euclid.pm',
-    PL_FILES            => {},
-    PREREQ_PM => {
-        'Test::More' => 0,
-        'version'    => 0,
-        'File::Spec::Functions' => 0,
-        'List::Util' => 0,
-    },
-    dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
-    clean               => { FILES => 'Getopt-Euclid-*' },
+BEGIN { require 5.008; }
+
+use ExtUtils::MakeMaker 6.30;
+
+
+
+my %WriteMakefileArgs = (
+  'ABSTRACT' => 'Executable Uniform Command-Line Interface Descriptions',
+  'AUTHOR' => 'Damian Conway <DCONWAY@cpan.org>, Kevin Galinsky <kgalinsky+cpan#gmail.com>, Mark Gardner <mjgardner@cpan.org>',
+  'BUILD_REQUIRES' => {
+    'English' => '0',
+    'File::Find' => '0',
+    'File::Temp' => '0',
+    'Scalar::Util' => '0',
+    'Test::More' => '0.94'
+  },
+  'CONFIGURE_REQUIRES' => {
+    'ExtUtils::MakeMaker' => '6.30'
+  },
+  'DISTNAME' => 'Getopt-Proclus',
+  'EXE_FILES' => [],
+  'LICENSE' => 'perl',
+  'NAME' => 'Getopt::Proclus',
+  'PREREQ_PM' => {
+    'Carp' => '0',
+    'File::Spec::Functions' => '0',
+    'IO::Page' => '0',
+    'IO::Pager::Page' => '0',
+    'List::Util' => '0',
+    'Pod::Text' => '0',
+    're' => '0',
+    'utf8' => '0'
+  },
+  'VERSION' => '0.2.4',
+  'test' => {
+    'TESTS' => 't/*.t'
+  }
 );
+
+
+unless ( eval { ExtUtils::MakeMaker->VERSION(6.56) } ) {
+  my $br = delete $WriteMakefileArgs{BUILD_REQUIRES};
+  my $pp = $WriteMakefileArgs{PREREQ_PM};
+  for my $mod ( keys %$br ) {
+    if ( exists $pp->{$mod} ) {
+      $pp->{$mod} = $br->{$mod} if $br->{$mod} > $pp->{$mod};
+    }
+    else {
+      $pp->{$mod} = $br->{$mod};
+    }
+  }
+}
+
+delete $WriteMakefileArgs{CONFIGURE_REQUIRES}
+  unless eval { ExtUtils::MakeMaker->VERSION(6.52) };
+
+WriteMakefile(%WriteMakefileArgs);
+
+
+

@@ -1,8 +1,5 @@
 BEGIN {
-    @ARGV = (
-        "-e1with space1",
-        "-e2", "with space2",
-        "-e3", "with", "space3",
+    @ARGV = ( "-e1with space1", "-e2", "with space2", "-e3", "with", "space3",
     );
 }
 
@@ -10,15 +7,15 @@ use Getopt::Euclid;
 use Test::More 'no_plan';
 
 sub got_arg {
-    my ($key, $val) = @_;
+    my ( $key, $val ) = @_;
     is $ARGV{$key}, $val, "Got expected value for $key";
 }
 
 is keys %ARGV, 4 => 'Right number of args returned';
 
-got_arg -e1 => 'with space1';
-got_arg -e2 => 'with space2';
-got_arg -e3 => 'with';
+got_arg -e1           => 'with space1';
+got_arg -e2           => 'with space2';
+got_arg -e3           => 'with';
 got_arg '<remainder>' => 'space3';
 
 __END__

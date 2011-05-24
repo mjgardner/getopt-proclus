@@ -16,30 +16,29 @@ BEGIN {
     $TIMEOUT = 7;
 
     @ARGV = (
-        "-i   $INFILE",
-        "-out=", $OUTFILE,
-        "-lgth $LEN",
-        "-step ${H}x${W}",
-        '-v',
-        "--timeout $TIMEOUT",
-        '-w', 's p a c e s',
-        7,
+        "-i   $INFILE",       "-out=",
+        $OUTFILE,             "-lgth $LEN",
+        "-step ${H}x${W}",    '-v',
+        "--timeout $TIMEOUT", '-w',
+        's p a c e s',        7,
     );
 }
 
-if (eval { require Getopt::Euclid;
-           Getopt::Euclid->import(qw( :minimal_keys ));
-           1;
-         }
-   ) {
+if (eval {
+        require Getopt::Euclid;
+        Getopt::Euclid->import(qw( :minimal_keys ));
+        1;
+    }
+    )
+{
     is 0 => 'Succeeded unexpectedly';
 }
 else {
     my $error = $@;
-    like $error, qr{\AInternal error: minimalist mode caused arguments}
-                                                    => 'Clashed as expected';
-    like $error, qr{'-step}                         => 'Clashed on -step';
-    like $error, qr{'<step>'}                       => 'Clashed on <step>';
+    like $error, qr{\AInternal error: minimalist mode caused arguments} =>
+        'Clashed as expected';
+    like $error, qr{'-step}   => 'Clashed on -step';
+    like $error, qr{'<step>'} => 'Clashed on <step>';
 }
 
 __END__

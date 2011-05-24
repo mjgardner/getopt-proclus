@@ -1,8 +1,5 @@
 BEGIN {
-    @ARGV = (
-        "-h=hostname1234",
-        "-dim=3,4",
-    );
+    @ARGV = ( "-h=hostname1234", "-dim=3,4", );
 }
 
 use Getopt::Euclid;
@@ -10,13 +7,13 @@ use Getopt::Euclid;
 use Test::More 'no_plan';
 
 sub got_arg {
-    my ($key, $val) = @_;
+    my ( $key, $val ) = @_;
     is $ARGV{$key}, $val, "Got expected value for $key";
 }
 
-is $ARGV{'-h'}{dev},  'hostname'  => 'Got expected value for -h <dev>';
-is $ARGV{'-h'}{port}, 1234        => 'Got expected value for -h <port>';
-is $ARGV{'-dim'}, '3,4'           => 'Got expected value for -dim';
+is $ARGV{'-h'}{dev},  'hostname' => 'Got expected value for -h <dev>';
+is $ARGV{'-h'}{port}, 1234       => 'Got expected value for -h <port>';
+is $ARGV{'-dim'}, '3,4' => 'Got expected value for -dim';
 
 __END__
 
@@ -66,4 +63,3 @@ Copyright (c) 2002, Damian Conway. All Rights Reserved.
 This module is free software. It may be used, redistributed
 and/or modified under the terms of the Perl Artistic License
   (see http://www.perl.com/perl/misc/Artistic.html)
-

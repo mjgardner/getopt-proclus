@@ -7,14 +7,19 @@ BEGIN {
     *CORE::GLOBAL::exit = sub { die $stderr };
 }
 
-if (eval { require Getopt::Euclid and Getopt::Euclid->import(':foo'); 1 }) {
+if ( eval { require Getopt::Euclid and Getopt::Euclid->import(':foo'); 1 } ) {
     ok 0 => 'Unexpectedly succeeded';
 }
 else {
-    like $@, qr/Unknown mode \(':foo'\)/ => 'Failed as expected'; 
+    like $@, qr/Unknown mode \(':foo'\)/ => 'Failed as expected';
 }
 
-if (eval { require Getopt::Euclid and Getopt::Euclid->import(':minimal_keys'); 1 }) {
+if (eval {
+        require Getopt::Euclid and Getopt::Euclid->import(':minimal_keys');
+        1;
+    }
+    )
+{
     ok 1 => 'Minimal mode accepted';
 }
 else {

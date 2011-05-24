@@ -23,12 +23,12 @@ BEGIN {
     );
 }
 
-if (eval { require Getopt::Euclid and Getopt::Euclid->import(); 1 }) {
+if ( eval { require Getopt::Euclid and Getopt::Euclid->import(); 1 } ) {
     ok 0 => 'Unexpectedly succeeded';
 }
 else {
-    like $@, qr/Missing required argument:/ => 'Failed as expected'; 
-    like $@, qr/-o/                         => 'With expected message'; 
+    like $@, qr/Missing required argument:/ => 'Failed as expected';
+    like $@, qr/-o/ => 'With expected message';
 }
 
 __END__
