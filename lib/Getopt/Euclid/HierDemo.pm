@@ -1,7 +1,7 @@
 #
 # This file is part of Getopt-Proclus
 #
-# This software is copyright (c) 2011 by Damian Conway.
+# This software is copyright (c) 2005 by Damian Conway.
 #
 # This is free software; you can redistribute it and/or modify it under
 # the same terms as the Perl 5 programming language system itself.
@@ -14,7 +14,7 @@ use utf8;
 package Getopt::Euclid::HierDemo;
 
 BEGIN {
-    $Getopt::Euclid::HierDemo::VERSION = '0.2.4';
+    $Getopt::Euclid::HierDemo::VERSION = '0.300';
 }
 
 # ABSTRACT: Module for hier*.t tests
@@ -37,7 +37,7 @@ Getopt::Euclid::HierDemo - Module for hier*.t tests
 
 =head1 VERSION
 
-version 0.2.4
+version 0.300
 
 =head1 REQUIRED ARGUMENTS
 
@@ -168,7 +168,7 @@ Mark Gardner <mjgardner@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2011 by Damian Conway.
+This software is copyright (c) 2005 by Damian Conway.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

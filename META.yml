@@ -32,4 +32,4 @@ requires:
 resources:
   bugtracker: https://github.com/mjgardner/getopt-proclus/issues
   repository: git://github.com/mjgardner/getopt-proclus.git
-version: 0.2.4
+version: 0.300
