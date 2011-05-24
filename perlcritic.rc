@@ -5,6 +5,9 @@ exclude = Editor::RequireEmacsFileVariables Miscellanea::RequireRcsKeywords Modu
 [Lax::RequireExplicitPackage::ExceptForPragmata]
 allowed_pragmata = perlversion strict warnings utf8 Modern::Perl
 
+[Bangs::ProhibitVagueNames]
+names = data info obj object tmp temp
+
 [CodeLayout::RequireTidyCode]
 perltidyrc = xt/author/perltidy.rc
 
