@@ -134,7 +134,7 @@ sub import {
     if ( $caller[1] =~ m/[.]pm \z/xms ) {
 
         # Save module's POD...
-        @std_POD = file( $caller[1] )->slurp( chomp => 1 )
+        @std_POD = file( $caller[1] )->slurp()
             or croak
             "Getopt::Euclid was unable to access POD\n($OS_ERROR)\nProblem was";
 
@@ -830,8 +830,7 @@ sub _print_and_exit {
         open my $pod_handle, '<', \$pod;
         my $parser = Pod::Text->new( sentence => 0, width => 78 );
         $parser->parse_from_filehandle($pod_handle);
-
-        #        close $pod_handle;
+        close $pod_handle;
     }
     else {
         print $pod;
