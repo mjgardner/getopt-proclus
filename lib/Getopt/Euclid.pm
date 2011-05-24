@@ -370,7 +370,7 @@ ARG:
     # Handle standard args...
     given ( \@ARGV ) {
         no warnings 'closure';
-        when ( grep {/ --man /xms} @{$_} ) {
+        when ( first { $_ and m/ --man /xms } @{$_} ) {
             _print_and_exit( $pod, 'paged' )
         }
         when ( first { $_ and $_ eq '--usage' } @{$_} ) {
@@ -668,14 +668,16 @@ ARG:
                             : $entry->{$var}
                             )
                         {
-                            _bad_arglist(
-                                qq{Invalid "$arg_name" argument.\n},
-                                qq{<$var> must be },
-                                $arg_vars->{$var}{constraint_desc},
-                                qq{ but the supplied value ("$val") isn't.}
-                                )
-                                if $arg_vars->{$var}{constraint}
-                                    && !$arg_vars->{$var}{constraint}->($val);
+                            if ( $arg_vars->{$var}{constraint}
+                                && !$arg_vars->{$var}{constraint}->($val) )
+                            {
+                                _bad_arglist(
+                                    qq{Invalid "$arg_name" argument.\n},
+                                    qq{<$var> must be },
+                                    $arg_vars->{$var}{constraint_desc},
+                                    qq{ but the supplied value ("$val") isn't.},
+                                );
+                            }
                         }
                         next VAR;
                     }
@@ -688,14 +690,16 @@ ARG:
                             : $entry
                             )
                         {
-                            _bad_arglist(
-                                qq{Invalid "$arg_name" argument.\n},
-                                qq{<$var> must be },
-                                $arg_vars->{$var}{constraint_desc},
-                                qq{ but the supplied value ("$val") isn't.}
-                                )
-                                if $arg_vars->{$var}{constraint}
-                                    && !$arg_vars->{$var}{constraint}->($val);
+                            if ( $arg_vars->{$var}{constraint}
+                                && !$arg_vars->{$var}{constraint}->($val) )
+                            {
+                                _bad_arglist(
+                                    qq{Invalid "$arg_name" argument.\n},
+                                    qq{<$var> must be },
+                                    $arg_vars->{$var}{constraint_desc},
+                                    qq{ but the supplied value ("$val") isn't.},
+                                );
+                            }
                             $entry->{$var} = q{}
                                 unless defined $ARGV{$arg_name};
                         }
@@ -744,7 +748,7 @@ sub _convert_to_regex {
         $regex = "(?:$regex)";
 
         # Convert optionals...
-        1 while $regex =~ s/ \[ ([^]]*) \] /(?:$1)?/gxms;
+        while ( $regex =~ s/ \[ ([^]]*) \] /(?:$1)?/gxms ) {1}
 
         $regex =~ s/ (\s+) /$1.'[\\s\\0\\1]*'/egxms;
         my $generic = $regex;
