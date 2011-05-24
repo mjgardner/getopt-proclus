@@ -158,7 +158,7 @@ sub import {
     my $source = do { local $INPUT_RECORD_SEPARATOR; <$fh> };
 
     # Clean up line delimeters
-    s{ [\n\r] }{\n}gx foreach ( $source, @std_POD );
+    for ( $source, @std_POD ) {s{ [\n\r] }{\n}gx}
 
     # Clean up significant entities...
     $source =~ s{ E<lt> }{<}gxms;
@@ -369,8 +369,8 @@ ARG:
     my $arg_summary = join q{ },
         sort { $requireds{$a}{seq} <=> $requireds{$b}{seq} }
         keys %requireds;
-    1 while $arg_summary =~ s/\[ [^][]* \]//gxms;
-    $arg_summary .= lc " [$opt_name]" if $opt_name;
+    while ( $arg_summary =~ s/\[ [^][]* \]//gxms ) {1}
+    if ($opt_name) { $arg_summary .= lc " [$opt_name]" }
     $arg_summary =~ s/\s+/ /gxms;
 
     $pod =~ s{ ^(=head1 $NAME \s*) .*? (- .*)? $EOHEAD }
@@ -383,28 +383,28 @@ ARG:
             {$1 This document refers to $prog_name version $SCRIPT_VERSION $2}xms;
 
     # Handle standard args...
-    if ( grep {/ --man /xms} @ARGV ) {
-        _print_and_exit( $pod, 'paged' );
-    }
-    elsif ( first { $_ eq '--usage' } @ARGV ) {
-        print "Usage: $prog_name $arg_summary\n",
-            "       $prog_name --help\n";
-        exit;
-    }
-    elsif ( first { $_ eq '--help' } @ARGV ) {
-        my $pod = "=head1 Usage:\n\n$prog_name $arg_summary\n\n";
-        $pod .= "=head1 \L\u$req_name:\E\E\n\n$required\n\n"
-            if ( $required || q{} ) =~ /\S/;
-        $pod .= "=head1 \L\u$opt_name:\E\E\n\n$options\n\n"
-            if ( $options || q{} ) =~ /\S/;
-        _print_and_exit($pod);
-    }
-    elsif ( first { $_ eq '--version' } @ARGV ) {
-        print "This is $prog_name version $SCRIPT_VERSION\n";
-        if ($licence) {
-            print "\n$licence\n";
+    given ( \@ARGV ) {
+        when ( grep {/ --man /xms} @{$_} ) {
+            _print_and_exit( $pod, 'paged' )
         }
-        exit;
+        when ( first { $_ eq '--usage' } @{$_} ) {
+            say "Usage: $prog_name $arg_summary\n",
+                "       $prog_name --help";
+            exit;
+        }
+        when ( first { $_ eq '--help' } @{$_} ) {
+            my $pod = "=head1 Usage:\n\n$prog_name $arg_summary\n\n";
+            $pod .= "=head1 \L\u$req_name:\E\E\n\n$required\n\n"
+                if ( $required || q{} ) =~ /\S/;
+            $pod .= "=head1 \L\u$opt_name:\E\E\n\n$options\n\n"
+                if ( $options || q{} ) =~ /\S/;
+            _print_and_exit($pod);
+        }
+        when ( first { $_ eq '--version' } @{$_} ) {
+            say "This is $prog_name version $SCRIPT_VERSION";
+            if ($licence) { say "\n$licence" }
+            exit;
+        }
     }
 
     # Convert arg specifications to regexes...
