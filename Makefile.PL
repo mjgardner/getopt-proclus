@@ -43,6 +43,7 @@ my %WriteMakefileArgs = (
     'Moose' => '0',
     'Moose::Error::Default' => '0',
     'Moose::Exporter' => '0',
+    'MooseX::Has::Sugar' => '0',
     'Path::Class' => '0',
     'Pod::POM' => '0',
     'Pod::Text' => '0',

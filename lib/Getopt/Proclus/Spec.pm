@@ -9,50 +9,92 @@
 use utf8;
 use Modern::Perl;
 
-package Getopt::Proclus;
+package Getopt::Proclus::Spec;
 
 BEGIN {
-    $Getopt::Proclus::VERSION = '0.300';
+    $Getopt::Proclus::Spec::VERSION = '0.300';
 }
 
-# ABSTRACT: POD-Readable Options for Command-Line Uniform Syntax
+# ABSTRACT: POD options specification
 
 use Modern::Perl;
-use Carp;
 use English '-no_match_vars';
-use Moose ();
-use Moose::Error::Default;
-use Moose::Exporter;
-use Path::Class;
-use Pod::POM;
+use Moose;
+use MooseX::Has::Sugar;
 use Regexp::DefaultFlags;
 ## no critic (RegularExpressions::RequireDotMatchAnything)
 ## no critic (RegularExpressions::RequireExtendedFormatting)
 ## no critic (RegularExpressions::RequireLineBoundaryMatching)
-use Getopt::Proclus::Error;
-use Getopt::Proclus::Spec;
 use namespace::autoclean;
 
-Moose::Exporter->setup_import_methods( also => 'Moose' );
+has pom => ( ro, required, isa => 'Pod::POM::Node::Pod' );
 
-sub init_meta {
-    shift;
-    my %args   = @ARG;
-    my $meta   = Moose->init_meta(%args);
-    my $parser = Pod::POM->new();
-    my $pom    = $parser->parse_file(
-        file(
-            $INC{ file( split /::/, "$args{for_class}.pm" )->stringify() }
-            )->stringify()
-    ) or Getopt::Proclus::Error->throw( $parser->error );
-    my $spec = Getopt::Proclus::Spec->new( pom => $pom );
+has _attributes => ( ro, lazy_build,
+    isa     => 'HashRef[Moose::Meta::Attribute]',
+    traits  => ['Hash'],
+    handles => { attribute_names => 'keys', attribute => 'get' },
+);
 
-    for ( $spec->attribute_names ) {
-        $meta->add_attribute( $spec->attribute($ARG) );
+sub _build__attributes {    ## no critic (ProhibitUnusedPrivateSubroutines)
+    my $self = shift;
+
+    my %section = map { $ARG->title => $ARG->content } $self->pom->head1();
+    my %attribute;
+    while ( my ( $title, $content ) = each %section ) {
+        next if not $title ~~ [ 'REQUIRED ARGUMENTS', 'OPTIONS' ];
+        next if not defined $content or $content->type ne 'over';
+        my $required = ( $title eq 'REQUIRED ARGUMENTS' );
+
+        for my $item ( $content->item ) {
+            my %attr;
+            {
+                ## no critic (RegularExpressions::ProhibitUnusedCapture)
+                $item->title
+                    =~ m{\A (?:--?)? (?<name> \S+) \s+ (?<parameters> .* ) \s* \z};
+                %attr = %LAST_PAREN_MATCH;
+            }
+            $attr{name} =~ s/ \W //gxms;
+            $attr{parameters} = [ $attr{parameters} =~ /<\s* (\w+) \s*>/g ];
+
+            my @details = map { $ARG->text }
+                grep { $ARG->format =~ /\A Proclus:? \z/ } $item->for;
+            for my $detail (@details) {
+                my %option;
+                {
+                    ## no critic (RegularExpressions::ProhibitUnusedCapture)
+                    $detail =~ m{
+                        (?: (?<parameter> \w+ )[.] )?
+                        (?<option> \w+)
+                        \s* : \s*
+                        (?<value> \S* )
+                    };
+                    %option = %LAST_PAREN_MATCH;
+                }
+            }
+
+            if ( @{ $attr{parameters} } < 2 ) {
+                $attribute{ $attr{name} } = Moose::Meta::Attribute->new(
+                    $attr{name},
+                    is       => 'ro',
+                    required => $required,
+                );
+            }
+            else {
+                for my $sub_attr ( @{ $attr{parameters} } ) {
+                    $attribute{"$attr{name}_$sub_attr"}
+                        = Moose::Meta::Attribute->new(
+                        "$attr{name}_$sub_attr",
+                        is       => 'ro',
+                        required => $required,
+                        );
+                }
+            }
+        }
     }
-    return $meta;
+    return \%attribute;
 }
 
+__PACKAGE__->meta->make_immutable();
 1;
 
 __END__
@@ -67,7 +109,7 @@ diff irc mailto metadata placeholders
 
 =head1 NAME
 
-Getopt::Proclus - POD-Readable Options for Command-Line Uniform Syntax
+Getopt::Proclus::Spec - POD options specification
 
 =head1 VERSION
 
@@ -75,51 +117,42 @@ version 0.300
 
 =head1 SYNOPSIS
 
-    package My::Command;
-    use Getopt::Proclus;
+    use Getopt::Proclus::Spec;
+    use Pod::POM;
 
-    sub read_file {
-        my $self = shift;
-        say 'reading ', $self->infile->stringify();
-        return;
-    }
-
-    1;
-
-    =head1 REQUIRED ARGUMENTS
-
-    =over
-
-    =item -i[nfile] [=]<file>
-
-    Specify input file
-
-    =for Proclus:
-        file.is:  ro
-        file.isa: File
+    my $spec = Getopt::Proclus::Spec->new(
+        pom => Pod::POM->new->parse_text($pod_text) );
+    print "$_\n" for $spec->attribute_names;
 
 =head1 DESCRIPTION
 
-This module enables you to specify command line options for setting attributes
-in a L<Moose|Moose> class by writing them as L<POD|perlpod> within your class.
-You can then be assured that your documentation and options available are
-always in sync.
+This module parses a command line option specification described in
+L<POD|perlpod> and turns it into L<Moose attribute|Moose::Meta::Attribute>s.
+
+=head1 ATTRIBUTES
+
+=head2 pom
+
+Required attribute containing the L<Pod::POM::Node::Pod|Pod::POM::Node::Pod>
+results of parsing the class's POD.
 
 =head1 METHODS
 
-=head2 init_meta
+=head2 attribute_names
 
-Automatically called when you C<use Getopt::Proclus;>.
-Moosifies the class and then reads its POD for options to parse from the
-command line, returning the modified metaclass.
+Returns a list of attribute names defined in the POD.
+
+=head2 attribute
+
+Given an attribute name, returns the
+L<Moose::Meta::Attribute|Moose::Meta::Attribute> representation parsed from the
+class's POD.
 
 =head1 SEE ALSO
 
 =over
 
-=item L<Getopt::Euclid|Getopt::Euclid>
-
-The inspiration for this distribution
+=item L<Getopt::Proclus|Getopt::Proclus>
 
 =back
 

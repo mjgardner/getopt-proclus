@@ -36,8 +36,9 @@ DESCRIPTION
 
 METHODS
   init_meta
-    Moosifies the class and then reads its POD for options to parse from the
-    command line.
+    Automatically called when you "use Getopt::Proclus;". Moosifies the
+    class and then reads its POD for options to parse from the command line,
+    returning the modified metaclass.
 
 SEE ALSO
     Getopt::Euclid

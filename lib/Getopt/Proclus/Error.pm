@@ -41,6 +41,24 @@ Getopt::Proclus::Error - Error thrown by Getopt::Proclus
 
 version 0.300
 
+=head1 SYNOPSIS
+
+    use Getopt::Proclus::Error;
+
+    Getopt::Proclus::Error->throw('something bad happened');
+
+=head1 DESCRIPTION
+
+This is a very basic subclass of L<Throwable::Error|Throwable::Error>.
+
+=head1 SEE ALSO
+
+=over
+
+=item L<Throwable::Error|Throwable::Error>
+
+=back
+
 =head1 SUPPORT
 
 =head2 Perldoc
