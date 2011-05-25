@@ -49,7 +49,7 @@ sub init_meta {
     for my $item (@required_items) {
         $item->title =~ m{\A
             (?:--?)?
-            (?<name> [^\s]+)
+            (?<name> \S+)
             \s+
             (?<parameters> .* )
             \s* \z};
@@ -139,7 +139,7 @@ command line.
 
 The inspiration for this distribution
 
-=over
+=back
 
 =head1 SUPPORT
 
