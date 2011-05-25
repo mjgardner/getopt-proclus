@@ -6,6 +6,7 @@ use Modern::Perl;
 use Carp;
 use English '-no_match_vars';
 use Moose ();
+use Moose::Error::Default;
 use Moose::Exporter;
 use Path::Class;
 use Pod::POM;
@@ -13,6 +14,8 @@ use Regexp::DefaultFlags;
 ## no critic (RegularExpressions::RequireDotMatchAnything)
 ## no critic (RegularExpressions::RequireExtendedFormatting)
 ## no critic (RegularExpressions::RequireLineBoundaryMatching)
+use Getopt::Proclus::Error;
+use namespace::autoclean;
 
 Moose::Exporter->setup_import_methods( also => 'Moose' );
 
@@ -33,20 +36,19 @@ sub init_meta {
         file(
             $INC{ file( split /::/, "$args{for_class}.pm" )->stringify() }
             )->stringify()
-    ) or croak $parser->error();
+    ) or Getopt::Proclus::Error->throw( $parser->error() );
 
     my @required_items = map { $ARG->item } map { $ARG->over }
         grep { $ARG->title eq 'REQUIRED ARGUMENTS' } $pom->head1();
 
     for my $item (@required_items) {
-        $item->title =~ m{\A
-            (?:--?)?
-            (?<name> \S+)
-            \s+
-            (?<parameters> .* )
-            \s* \z};
-        my %attr = %LAST_PAREN_MATCH;
-
+        my %attr;
+        {
+            ## no critic (RegularExpressions::ProhibitUnusedCapture)
+            $item->title
+                =~ m{\A (?:--?)? (?<name> \S+) \s+ (?<parameters> .* ) \s* \z};
+            %attr = %LAST_PAREN_MATCH;
+        }
         $attr{name} =~ s/ \W //gxms;
         $attr{parameters} = [ $attr{parameters} =~ /<\s* (\w+) \s*>/g ];
 
