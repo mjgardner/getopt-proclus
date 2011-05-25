@@ -15,6 +15,7 @@ use Regexp::DefaultFlags;
 ## no critic (RegularExpressions::RequireExtendedFormatting)
 ## no critic (RegularExpressions::RequireLineBoundaryMatching)
 use Getopt::Proclus::Error;
+use Getopt::Proclus::Spec;
 use namespace::autoclean;
 
 Moose::Exporter->setup_import_methods( also => 'Moose' );
@@ -29,60 +30,19 @@ command line, returning the modified metaclass.
 
 sub init_meta {
     shift;
-    my %args = @ARG;
-    my $meta = Moose->init_meta(%args);
-
+    my %args   = @ARG;
+    my $meta   = Moose->init_meta(%args);
     my $parser = Pod::POM->new();
     my $pom    = $parser->parse_file(
         file(
             $INC{ file( split /::/, "$args{for_class}.pm" )->stringify() }
             )->stringify()
     ) or Getopt::Proclus::Error->throw( $parser->error );
+    my $spec = Getopt::Proclus::Spec->new( pom => $pom );
 
-    my @required_items = map { $ARG->item } map { $ARG->over }
-        grep { $ARG->title eq 'REQUIRED ARGUMENTS' } $pom->head1();
-
-    for my $item (@required_items) {
-        my %attr;
-        {
-            ## no critic (RegularExpressions::ProhibitUnusedCapture)
-            $item->title
-                =~ m{\A (?:--?)? (?<name> \S+) \s+ (?<parameters> .* ) \s* \z};
-            %attr = %LAST_PAREN_MATCH;
-        }
-        $attr{name} =~ s/ \W //gxms;
-        $attr{parameters} = [ $attr{parameters} =~ /<\s* (\w+) \s*>/g ];
-
-        my @details = map { $ARG->text }
-            grep { $ARG->format =~ /\A Proclus:? \z/ } $item->for;
-        for my $detail (@details) {
-            $detail =~ m{
-                (?: (?<parameter> \w+ )[.] )?
-                (?<option> \w+)
-                \s* : \s*
-                (?<value> \S* )
-            };
-            my %option = %LAST_PAREN_MATCH;
-        }
-
-        if ( @{ $attr{parameters} } < 2 ) {
-            $meta->add_attribute(
-                $attr{name},
-                accessor => $attr{name},
-                required => 1,
-            );
-        }
-        else {
-            for my $sub_attr ( @{ $attr{parameters} } ) {
-                $meta->add_attribute(
-                    "$attr{name}_$sub_attr",
-                    accessor => "$attr{name}_$sub_attr",
-                    required => 1,
-                );
-            }
-        }
+    for ( $spec->attribute_names ) {
+        $meta->add_attribute( $spec->attribute($ARG) );
     }
-
     return $meta;
 }
 

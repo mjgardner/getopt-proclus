@@ -50,8 +50,9 @@ always in sync.
 
 =head2 init_meta
 
+Automatically called when you C<use Getopt::Proclus;>.
 Moosifies the class and then reads its POD for options to parse from the
-command line.
+command line, returning the modified metaclass.
 
 =head1 SEE ALSO
 

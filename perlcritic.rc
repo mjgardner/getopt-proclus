@@ -28,7 +28,7 @@ functions = :builtins
 exclude_functions = print say
 
 [Subroutines::ProhibitCallsToUndeclaredSubs]
-exempt_subs = Carp::carp Carp::croak Moose::extends Path::Class::file
+exempt_subs = Carp::carp Carp::croak Moose::extends Moose::has MooseX::Has::Sugar::lazy_build MooseX::Has::Sugar::required MooseX::Has::Sugar::ro Path::Class::file
 
 [TestingAndDebugging::RequireUseStrict]
 equivalent_modules = Modern::Perl
