@@ -9,8 +9,8 @@ use ExtUtils::MakeMaker 6.30;
 
 
 my %WriteMakefileArgs = (
-  'ABSTRACT' => 'Executable Uniform Command-Line Interface Descriptions',
-  'AUTHOR' => 'Damian Conway <DCONWAY@cpan.org>, Kevin Galinsky <kgalinsky+cpan#gmail.com>, Mark Gardner <mjgardner@cpan.org>',
+  'ABSTRACT' => 'POD-Readable Options for Command-Line Uniform Syntax',
+  'AUTHOR' => 'Mark Gardner <mjgardner@cpan.org>, Damian Conway <DCONWAY@cpan.org>, Kevin Galinsky <kgalinsky+cpan#gmail.com>',
   'BUILD_REQUIRES' => {
     'File::Find' => '0',
     'File::Temp' => '0',

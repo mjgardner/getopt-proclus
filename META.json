@@ -1,9 +1,9 @@
 {
-   "abstract" : "Executable Uniform Command-Line Interface Descriptions",
+   "abstract" : "POD-Readable Options for Command-Line Uniform Syntax",
    "author" : [
+      "Mark Gardner <mjgardner@cpan.org>",
       "Damian Conway <DCONWAY@cpan.org>",
-      "Kevin Galinsky <kgalinsky+cpan#gmail.com>",
-      "Mark Gardner <mjgardner@cpan.org>"
+      "Kevin Galinsky <kgalinsky+cpan#gmail.com>"
    ],
    "dynamic_config" : 0,
    "generated_by" : "Dist::Zilla version 4.200006, CPAN::Meta::Converter version 2.110930",

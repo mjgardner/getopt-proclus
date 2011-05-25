@@ -1,7 +1,7 @@
 #
 # This file is part of Getopt-Proclus
 #
-# This software is copyright (c) 2005 by Damian Conway.
+# This software is copyright (c) 2011 by GSI Commerce.
 #
 # This is free software; you can redistribute it and/or modify it under
 # the same terms as the Perl 5 programming language system itself.
@@ -25,9 +25,9 @@ __END__
 
 =pod
 
-=for :stopwords Damian Conway Kevin Galinsky <kgalinsky+cpan#gmail.com> Mark Gardner cpan
-testmatrix url annocpan anno bugtracker rt cpants kwalitee diff irc mailto
-metadata placeholders
+=for :stopwords Mark Gardner Damian Conway Kevin Galinsky <kgalinsky+cpan#gmail.com> GSI
+Commerce cpan testmatrix url annocpan anno bugtracker rt cpants kwalitee
+diff irc mailto metadata placeholders
 
 =encoding utf8
 
@@ -65,7 +65,7 @@ Specify output file
 
 You can find documentation for this module with the perldoc command.
 
-  perldoc Getopt::Euclid
+  perldoc Getopt::Proclus
 
 =head2 Websites
 
@@ -128,7 +128,7 @@ CPAN Testers Dependencies
 
 The CPAN Testers Dependencies is a website that shows a chart of the test results of all dependencies for a distribution.
 
-L<http://deps.cpantesters.org/?module=Getopt::Euclid>
+L<http://deps.cpantesters.org/?module=Getopt::Proclus>
 
 =back
 
@@ -154,21 +154,21 @@ L<https://github.com/mjgardner/getopt-proclus>
 
 =item *
 
+Mark Gardner <mjgardner@cpan.org>
+
+=item *
+
 Damian Conway <DCONWAY@cpan.org>
 
 =item *
 
 Kevin Galinsky <kgalinsky+cpan#gmail.com>
 
-=item *
-
-Mark Gardner <mjgardner@cpan.org>
-
 =back
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2005 by Damian Conway.
+This software is copyright (c) 2011 by GSI Commerce.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
