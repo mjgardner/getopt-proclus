@@ -47,12 +47,8 @@ sub init_meta {
         grep { $ARG->title eq 'REQUIRED ARGUMENTS' } $pom->head1();
 
     for my $item (@required_items) {
-        $item->title =~ m{\A
-            (?:--?)?
-            (?<name> \S+)
-            \s+
-            (?<parameters> .* )
-            \s* \z};
+        $item->title
+            =~ m{\A (?:--?)? (?<name> \S+) \s+ (?<parameters> .* ) \s* \z};
         my %attr = %LAST_PAREN_MATCH;
 
         $attr{name} =~ s/ \W //gxms;
