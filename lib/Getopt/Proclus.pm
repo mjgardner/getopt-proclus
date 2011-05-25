@@ -21,8 +21,9 @@ Moose::Exporter->setup_import_methods( also => 'Moose' );
 
 =method init_meta
 
+Automatically called when you C<use Getopt::Proclus;>.
 Moosifies the class and then reads its POD for options to parse from the
-command line.
+command line, returning the modified metaclass.
 
 =cut
 
@@ -36,7 +37,7 @@ sub init_meta {
         file(
             $INC{ file( split /::/, "$args{for_class}.pm" )->stringify() }
             )->stringify()
-    ) or Getopt::Proclus::Error->throw( $parser->error() );
+    ) or Getopt::Proclus::Error->throw( $parser->error );
 
     my @required_items = map { $ARG->item } map { $ARG->over }
         grep { $ARG->title eq 'REQUIRED ARGUMENTS' } $pom->head1();
@@ -51,6 +52,18 @@ sub init_meta {
         }
         $attr{name} =~ s/ \W //gxms;
         $attr{parameters} = [ $attr{parameters} =~ /<\s* (\w+) \s*>/g ];
+
+        my @details = map { $ARG->text }
+            grep { $ARG->format =~ /\A Proclus:? \z/ } $item->for;
+        for my $detail (@details) {
+            $detail =~ m{
+                (?: (?<parameter> \w+ )[.] )?
+                (?<option> \w+)
+                \s* : \s*
+                (?<value> \S* )
+            };
+            my %option = %LAST_PAREN_MATCH;
+        }
 
         if ( @{ $attr{parameters} } < 2 ) {
             $meta->add_attribute(
