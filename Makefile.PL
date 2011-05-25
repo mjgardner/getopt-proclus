@@ -14,8 +14,12 @@ my %WriteMakefileArgs = (
   'BUILD_REQUIRES' => {
     'File::Find' => '0',
     'File::Temp' => '0',
+    'FindBin' => '0',
+    'Readonly' => '0',
     'Scalar::Util' => '0',
+    'Test::Moose' => '0',
     'Test::More' => '0.94',
+    'local::lib' => '0',
     'perl' => '5.004',
     'vars' => '0'
   },
@@ -36,15 +40,19 @@ my %WriteMakefileArgs = (
     'List::MoreUtils' => '0',
     'List::Util' => '0',
     'Modern::Perl' => '0',
+    'Moose' => '0',
+    'Moose::Exporter' => '0',
     'Path::Class' => '0',
+    'Pod::POM' => '0',
     'Pod::Text' => '0',
+    'Regexp::DefaultFlags' => '0',
     'autodie' => '0',
     're' => '0',
     'utf8' => '0'
   },
   'VERSION' => '0.300',
   'test' => {
-    'TESTS' => 't/*.t'
+    'TESTS' => 't/*.t t/euclid/*.t'
   }
 );
 
