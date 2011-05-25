@@ -17,7 +17,7 @@ above_version = 5.010
 above_version = 5.010
 
 [Documentation::PodSpelling]
-stop_words = bugtracker Perldoc perldoc annonations PASSed callee CLI perl automagically prepended substring multi LICENCE whitespace whitespacing boolean et cetera Unflagged unflagged syntaxes namespace satisify placeholder's behaviours
+stop_words = bugtracker Perldoc perldoc annonations PASSed callee CLI perl automagically prepended substring multi LICENCE whitespace whitespacing boolean et cetera Unflagged unflagged syntaxes namespace satisify placeholder's behaviours Moosifies
 
 [Documentation::RequirePodSections]
 lib_sections = NAME | VERSION | SYNOPSIS | DESCRIPTION | SUPPORT | AUTHORS | COPYRIGHT AND LICENSE

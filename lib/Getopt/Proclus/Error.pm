@@ -9,78 +9,17 @@
 use utf8;
 use Modern::Perl;
 
-package Getopt::Proclus;
+package Getopt::Proclus::Error;
 
 BEGIN {
-    $Getopt::Proclus::VERSION = '0.300';
+    $Getopt::Proclus::Error::VERSION = '0.300';
 }
 
-# ABSTRACT: POD-Readable Options for Command-Line Uniform Syntax
+# ABSTRACT: Error thrown by Getopt::Proclus
 
-use Modern::Perl;
-use Carp;
-use English '-no_match_vars';
-use Moose ();
-use Moose::Error::Default;
-use Moose::Exporter;
-use Path::Class;
-use Pod::POM;
-use Regexp::DefaultFlags;
-## no critic (RegularExpressions::RequireDotMatchAnything)
-## no critic (RegularExpressions::RequireExtendedFormatting)
-## no critic (RegularExpressions::RequireLineBoundaryMatching)
-use Getopt::Proclus::Error;
+use Moose;
 use namespace::autoclean;
-
-Moose::Exporter->setup_import_methods( also => 'Moose' );
-
-sub init_meta {
-    shift;
-    my %args = @ARG;
-    my $meta = Moose->init_meta(%args);
-
-    my $parser = Pod::POM->new();
-    my $pom    = $parser->parse_file(
-        file(
-            $INC{ file( split /::/, "$args{for_class}.pm" )->stringify() }
-            )->stringify()
-    ) or Getopt::Proclus::Error->throw( $parser->error() );
-
-    my @required_items = map { $ARG->item } map { $ARG->over }
-        grep { $ARG->title eq 'REQUIRED ARGUMENTS' } $pom->head1();
-
-    for my $item (@required_items) {
-        {
-            ## no critic (RegularExpressions::ProhibitUnusedCapture)
-            $item->title
-                =~ m{\A (?:--?)? (?<name> \S+) \s+ (?<parameters> .* ) \s* \z};
-        }
-        my %attr = %LAST_PAREN_MATCH;
-
-        $attr{name} =~ s/ \W //gxms;
-        $attr{parameters} = [ $attr{parameters} =~ /<\s* (\w+) \s*>/g ];
-
-        if ( @{ $attr{parameters} } < 2 ) {
-            $meta->add_attribute(
-                $attr{name},
-                accessor => $attr{name},
-                required => 1,
-            );
-        }
-        else {
-            for my $sub_attr ( @{ $attr{parameters} } ) {
-                $meta->add_attribute(
-                    "$attr{name}_$sub_attr",
-                    accessor => "$attr{name}_$sub_attr",
-                    required => 1,
-                );
-            }
-        }
-    }
-
-    return $meta;
-}
-
+extends 'Throwable::Error';
 __PACKAGE__->meta->make_immutable();
 1;
 
@@ -96,60 +35,11 @@ diff irc mailto metadata placeholders
 
 =head1 NAME
 
-Getopt::Proclus - POD-Readable Options for Command-Line Uniform Syntax
+Getopt::Proclus::Error - Error thrown by Getopt::Proclus
 
 =head1 VERSION
 
 version 0.300
-
-=head1 SYNOPSIS
-
-    package My::Command;
-    use Getopt::Proclus;
-
-    sub read_file {
-        my $self = shift;
-        say 'reading ', $self->infile->stringify();
-        return;
-    }
-
-    1;
-
-    =head1 REQUIRED ARGUMENTS
-
-    =over
-
-    =item -i[nfile] [=]<file>
-
-    Specify input file
-
-    =for Proclus:
-        file.is:  ro
-        file.isa: File
-
-=head1 DESCRIPTION
-
-This module enables you to specify command line options for setting attributes
-in a L<Moose|Moose> class by writing them as L<POD|perlpod> within your class.
-You can then be assured that your documentation and options available are
-always in sync.
-
-=head1 METHODS
-
-=head2 init_meta
-
-Moosifies the class and then reads its POD for options to parse from the
-command line.
-
-=head1 SEE ALSO
-
-=over
-
-=item L<Getopt::Euclid|Getopt::Euclid>
-
-The inspiration for this distribution
-
-=back
 
 =head1 SUPPORT
 
