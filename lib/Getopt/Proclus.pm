@@ -25,18 +25,21 @@ use Moose::Exporter;
 use Path::Class;
 use Pod::POM;
 use Regexp::DefaultFlags;
+## no critic (RegularExpressions::RequireDotMatchAnything)
+## no critic (RegularExpressions::RequireExtendedFormatting)
+## no critic (RegularExpressions::RequireLineBoundaryMatching)
 
 Moose::Exporter->setup_import_methods( also => 'Moose' );
 
 sub init_meta {
-    my $class = shift;
-    my %args  = @ARG;
-    my $meta  = Moose->init_meta(%args);
+    shift;
+    my %args = @ARG;
+    my $meta = Moose->init_meta(%args);
 
     my $parser = Pod::POM->new();
     my $pom    = $parser->parse_file(
         file(
-            $INC{ file( split q{::}, "$args{for_class}.pm" )->stringify() }
+            $INC{ file( split /::/, "$args{for_class}.pm" )->stringify() }
             )->stringify()
     ) or croak $parser->error();
 
@@ -44,15 +47,15 @@ sub init_meta {
         grep { $ARG->title eq 'REQUIRED ARGUMENTS' } $pom->head1();
 
     for my $item (@required_items) {
-        $item->title =~ /\A
+        $item->title =~ m{\A
             (?:--?)?
             (?<name> [^\s]+)
             \s+
             (?<parameters> .* )
-            \s* \z/;
+            \s* \z};
         my %attr = %LAST_PAREN_MATCH;
 
-        $attr{name} =~ s/ [^\w] //gxms;
+        $attr{name} =~ s/ \W //gxms;
         $attr{parameters} = [ $attr{parameters} =~ /<\s* (\w+) \s*>/g ];
 
         if ( @{ $attr{parameters} } < 2 ) {
@@ -88,6 +91,55 @@ Getopt::Proclus - POD-Readable Options for Command-Line Uniform Syntax
 =head1 VERSION
 
 version 0.300
+
+=head1 SYNOPSIS
+
+    package My::Command;
+    use Getopt::Proclus;
+
+    sub read_file {
+        my $self = shift;
+        say 'reading ', $self->infile->stringify();
+        return;
+    }
+
+    1;
+
+    =head1 REQUIRED ARGUMENTS
+
+    =over
+
+    =item -i[nfile] [=]<file>
+
+    Specify input file
+
+    =for Proclus:
+        file.is:  ro
+        file.isa: File
+
+=head1 DESCRIPTION
+
+This module enables you to specify command line options for setting attributes
+in a L<Moose|Moose> class by writing them as L<POD|perlpod> within your class.
+You can then be assured that your documentation and options available are
+always in sync.
+
+=head1 METHODS
+
+=head2 init_meta
+
+Moosifies the class and then reads its POD for options to parse from the
+command line.
+
+=head1 SEE ALSO
+
+=over
+
+=item L<Getopt::Euclid|Getopt::Euclid>
+
+The inspiration for this distribution
+
+=over
 
 =head1 SUPPORT
 
