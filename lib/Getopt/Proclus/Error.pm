@@ -20,7 +20,7 @@ BEGIN {
 use Moose;
 use namespace::autoclean;
 extends 'Throwable::Error';
-__PACKAGE__->meta->make_immutable();
+
 1;
 
 __END__
