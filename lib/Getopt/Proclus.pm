@@ -50,13 +50,13 @@ sub init_meta {
         grep { $ARG->title eq 'REQUIRED ARGUMENTS' } $pom->head1();
 
     for my $item (@required_items) {
+        my %attr;
         {
             ## no critic (RegularExpressions::ProhibitUnusedCapture)
             $item->title
                 =~ m{\A (?:--?)? (?<name> \S+) \s+ (?<parameters> .* ) \s* \z};
+            %attr = %LAST_PAREN_MATCH;
         }
-        my %attr = %LAST_PAREN_MATCH;
-
         $attr{name} =~ s/ \W //gxms;
         $attr{parameters} = [ $attr{parameters} =~ /<\s* (\w+) \s*>/g ];
 
