@@ -29,3 +29,18 @@ Specify output file
     file.default: '-'
 
 =back
+
+=head1 OPTIONS
+
+=over
+
+=item -v[erbose]
+
+Report progress
+
+=for Proclus:
+    is:      ro
+    isa:     Bool
+    default: 0
+
+=back

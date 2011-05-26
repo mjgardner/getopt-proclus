@@ -53,12 +53,17 @@ sub _build__attributes {    ## no critic (ProhibitUnusedPrivateSubroutines)
             my %attr;
             {
                 ## no critic (RegularExpressions::ProhibitUnusedCapture)
-                $item->title
-                    =~ m{\A (?:--?)? (?<name> \S+) \s+ (?<parameters> .* ) \s* \z};
+                $item->title =~ m{\A
+                    (?:--?)? (?<name> \S+)
+                    (?: \s+ (?<parameters> .* ) )? \s*
+                \z};
                 %attr = %LAST_PAREN_MATCH;
             }
             $attr{name} =~ s/ \W //gxms;
-            $attr{parameters} = [ $attr{parameters} =~ /<\s* (\w+) \s*>/g ];
+            if ( exists $attr{parameters} ) {
+                $attr{parameters}
+                    = [ $attr{parameters} =~ /<\s* (\w+) \s*>/g ];
+            }
 
             my @details = map { $ARG->text }
                 grep { $ARG->format =~ /\A Proclus:? \z/ } $item->for;
@@ -76,7 +81,8 @@ sub _build__attributes {    ## no critic (ProhibitUnusedPrivateSubroutines)
                 }
             }
 
-            if ( @{ $attr{parameters} } < 2 ) {
+            if ( not exists $attr{parameters} or @{ $attr{parameters} } < 2 )
+            {
                 $attribute{ $attr{name} } = Moose::Meta::Attribute->new(
                     $attr{name},
                     is       => 'ro',
