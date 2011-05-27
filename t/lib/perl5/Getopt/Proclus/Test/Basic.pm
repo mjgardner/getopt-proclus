@@ -3,8 +3,9 @@ package Getopt::Proclus::Test::Basic;
 # ABSTRACT: Basic Proclus test
 
 use Getopt::Proclus;
-
-1;
+use MooseX::Has::Sugar;
+use MooseX::Types::Moose 'Bool';
+use MooseX::Types::Path::Class 'File';
 
 =head1 REQUIRED ARGUMENTS
 
@@ -14,19 +15,17 @@ use Getopt::Proclus;
 
 Specify input file
 
-=for Proclus:
-    file.is:      ro
-    file.isa:     File
-    file.default: '-'
+=cut
+
+has '+infile' => ( isa => File, default => '<-' );
 
 =item  -o[ut][file]= <file>
 
 Specify output file
 
-=for Proclus:
-    file.is:      ro
-    file.isa:     File
-    file.default: '-'
+=cut
+
+has '+outfile' => ( isa => File, default => '>-' );
 
 =back
 
@@ -38,9 +37,6 @@ Specify output file
 
 Report progress
 
-=for Proclus:
-    is:      ro
-    isa:     Bool
-    default: 0
+=cut
 
-=back
+1;

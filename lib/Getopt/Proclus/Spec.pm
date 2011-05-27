@@ -65,22 +65,6 @@ sub _build__attributes {    ## no critic (ProhibitUnusedPrivateSubroutines)
                     = [ $attr{parameters} =~ /<\s* (\w+) \s*>/g ];
             }
 
-            my @details = map { $ARG->text }
-                grep { $ARG->format =~ /\A Proclus:? \z/ } $item->for;
-            for my $detail (@details) {
-                my %option;
-                {
-                    ## no critic (RegularExpressions::ProhibitUnusedCapture)
-                    $detail =~ m{
-                        (?: (?<parameter> \w+ )[.] )?
-                        (?<option> \w+)
-                        \s* : \s*
-                        (?<value> \S* )
-                    };
-                    %option = %LAST_PAREN_MATCH;
-                }
-            }
-
             if ( not exists $attr{parameters} or @{ $attr{parameters} } < 2 )
             {
                 $attribute{ $attr{name} } = Moose::Meta::Attribute->new(
